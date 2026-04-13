@@ -13,7 +13,7 @@ export interface PageContentBlockProps {
 const PageContentBlock: React.FC<PageContentBlockProps> = ({ title, showFlashKey, className, children }) => {
     useEffect(() => {
         if (title) {
-            document.title = title;
+            document.title = `${title} · Lumix Panel`;
         }
     }, [title]);
 
@@ -21,20 +21,23 @@ const PageContentBlock: React.FC<PageContentBlockProps> = ({ title, showFlashKey
         <CSSTransition timeout={150} classNames={'fade'} appear in>
             <>
                 <ContentContainer css={tw`my-4 sm:my-10`} className={className}>
-                    {showFlashKey && <FlashMessageRender byKey={showFlashKey} css={tw`mb-4`} />}
+                    {showFlashKey && <FlashMessageRender byKey={showFlashKey} className={'mb-4'} />}
                     {children}
                 </ContentContainer>
-                <ContentContainer css={tw`mb-4`}>
-                    <p css={tw`text-center text-neutral-500 text-xs`}>
+                <ContentContainer css={tw`mb-6`}>
+                    <p css={tw`text-center text-xs text-lumix-muted`}>
                         <a
                             rel={'noopener nofollow noreferrer'}
-                            href={'https://pterodactyl.io'}
+                            href={'https://luminoushost.net'}
                             target={'_blank'}
-                            css={tw`no-underline text-neutral-500 hover:text-neutral-300`}
+                            css={tw`font-medium text-lumix-muted no-underline transition-colors hover:text-indigo-300`}
                         >
-                            Pterodactyl&reg;
+                            Luminous Hosting
                         </a>
-                        &nbsp;&copy; 2015 - {new Date().getFullYear()}
+                        <span css={tw`mx-2 opacity-40`}>·</span>
+                        Lumix Panel
+                        <span css={tw`mx-2 opacity-40`}>·</span>
+                        <span css={tw`opacity-80`}>&copy; {new Date().getFullYear()}</span>
                     </p>
                 </ContentContainer>
             </>

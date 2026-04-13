@@ -40,16 +40,18 @@ export default ({ onFileNamed, onDismissed, ...props }: Props) => {
                     }}
                     {...props}
                 >
-                    <Form>
+                    <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>Create file</h2>
+                    <p css={tw`mt-1 text-sm text-lumix-muted`}>Choose a file name relative to the current folder.</p>
+                    <Form css={tw`mt-4`}>
                         <Field
                             id={'fileName'}
                             name={'fileName'}
-                            label={'File Name'}
-                            description={'Enter the name that this file should be saved as.'}
+                            label={'File name'}
+                            description={'This will be saved in the directory you had open in the file manager.'}
                             autoFocus
                         />
-                        <div css={tw`mt-6 text-right`}>
-                            <Button>Create File</Button>
+                        <div css={tw`mt-6 flex justify-end`}>
+                            <Button type={'submit'}>Create file</Button>
                         </div>
                     </Form>
                 </Modal>

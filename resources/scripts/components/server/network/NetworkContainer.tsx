@@ -4,7 +4,7 @@ import { useFlashKey } from '@/plugins/useFlash';
 import ServerContentBlock from '@/components/elements/ServerContentBlock';
 import { ServerContext } from '@/state/server';
 import AllocationRow from '@/components/server/network/AllocationRow';
-import Button from '@/components/elements/Button';
+import { Button } from '@/components/elements/button/index';
 import createServerAllocation from '@/api/server/network/createServerAllocation';
 import tw from 'twin.macro';
 import Can from '@/components/elements/Can';
@@ -12,6 +12,8 @@ import SpinnerOverlay from '@/components/elements/SpinnerOverlay';
 import getServerAllocations from '@/api/swr/getServerAllocations';
 import isEqual from 'react-fast-compare';
 import { useDeepCompareEffect } from '@/plugins/useDeepCompareEffect';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
+import LumixEmptyState from '@/components/lumix/LumixEmptyState';
 
 const NetworkContainer = () => {
     const [loading, setLoading] = useState(false);
@@ -50,31 +52,69 @@ const NetworkContainer = () => {
             .then(() => setLoading(false));
     };
 
+    const quota =
+        allocationLimit > 0 && data ? (
+            <p css={tw`text-sm text-lumix-muted`}>
+                <span css={tw`font-medium text-[var(--lumix-text)]`}>{data.length}</span> of {allocationLimit}{' '}
+                allocations used
+            </p>
+        ) : null;
+
+    const createControl =
+        allocationLimit > 0 && data && allocationLimit > data.length ? (
+            <>
+                <SpinnerOverlay visible={loading} />
+                <Button type={'button'} onClick={onCreateAllocation}>
+                    Create allocation
+                </Button>
+            </>
+        ) : null;
+
     return (
         <ServerContentBlock showFlashKey={'server:network'} title={'Network'}>
             {!data ? (
                 <Spinner size={'large'} centered />
             ) : (
                 <>
-                    {data.map((allocation) => (
-                        <AllocationRow key={`${allocation.ip}:${allocation.port}`} allocation={allocation} />
-                    ))}
-                    {allocationLimit > 0 && (
-                        <Can action={'allocation.create'}>
-                            <SpinnerOverlay visible={loading} />
-                            <div css={tw`mt-6 sm:flex items-center justify-end`}>
-                                <p css={tw`text-sm text-neutral-300 mb-4 sm:mr-6 sm:mb-0`}>
-                                    You are currently using {data.length} of {allocationLimit} allowed allocations for
-                                    this server.
-                                </p>
-                                {allocationLimit > data.length && (
-                                    <Button css={tw`w-full sm:w-auto`} color={'primary'} onClick={onCreateAllocation}>
-                                        Create Allocation
-                                    </Button>
-                                )}
-                            </div>
-                        </Can>
+                    <LumixSectionHeader
+                        title={'Allocations'}
+                        description={
+                            'Each allocation binds an address and port to this server. The primary allocation is shown to players first. Notes save automatically as you type.'
+                        }
+                        actions={
+                            <Can action={'allocation.create'}>
+                                {allocationLimit > 0 && data.length === 0 ? createControl : null}
+                            </Can>
+                        }
+                    />
+                    {data.length === 0 ? (
+                        <LumixEmptyState title={'No allocations yet'}>
+                            {allocationLimit > 0 ? (
+                                <>
+                                    Create an allocation to attach an IP and port. Your plan allows up to{' '}
+                                    {allocationLimit}.
+                                </>
+                            ) : (
+                                'This server does not have any allocations yet.'
+                            )}
+                        </LumixEmptyState>
+                    ) : (
+                        <div css={tw`flex flex-col gap-3`}>
+                            {data.map((allocation) => (
+                                <AllocationRow key={`${allocation.ip}:${allocation.port}`} allocation={allocation} />
+                            ))}
+                        </div>
                     )}
+                    <Can action={'allocation.create'}>
+                        {allocationLimit > 0 && data.length > 0 && (
+                            <div
+                                css={tw`mt-8 flex flex-col items-stretch justify-end gap-3 border-t border-lumix-border/30 pt-6 sm:flex-row sm:items-center`}
+                            >
+                                {quota}
+                                {createControl}
+                            </div>
+                        )}
+                    </Can>
                 </>
             )}
         </ServerContentBlock>

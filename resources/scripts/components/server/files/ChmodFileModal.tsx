@@ -56,13 +56,20 @@ const ChmodFileModal = ({ files, ...props }: OwnProps) => {
         <Formik onSubmit={submit} initialValues={{ mode: files.length > 1 ? '' : files[0].mode || '' }}>
             {({ isSubmitting }) => (
                 <Modal {...props} dismissable={!isSubmitting} showSpinnerOverlay={isSubmitting}>
-                    <Form css={tw`m-0`}>
-                        <div css={tw`flex flex-wrap items-end`}>
-                            <div css={tw`w-full sm:flex-1 sm:mr-4`}>
-                                <Field type={'string'} id={'file_mode'} name={'mode'} label={'File Mode'} autoFocus />
+                    <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>Set permissions</h2>
+                    <p css={tw`mt-1 text-sm text-lumix-muted`}>
+                        Enter a numeric mode (e.g. 644 or 755). Applies to {files.length} selected item
+                        {files.length === 1 ? '' : 's'}.
+                    </p>
+                    <Form css={tw`m-0 mt-4`}>
+                        <div css={tw`flex flex-col gap-4 sm:flex-row sm:items-end`}>
+                            <div css={tw`w-full flex-1`}>
+                                <Field type={'string'} id={'file_mode'} name={'mode'} label={'Mode'} autoFocus />
                             </div>
-                            <div css={tw`w-full sm:w-auto mt-4 sm:mt-0`}>
-                                <Button css={tw`w-full`}>Update</Button>
+                            <div css={tw`flex w-full justify-end sm:w-auto`}>
+                                <Button type={'submit'} css={tw`w-full sm:w-auto`}>
+                                    Update
+                                </Button>
                             </div>
                         </div>
                     </Form>

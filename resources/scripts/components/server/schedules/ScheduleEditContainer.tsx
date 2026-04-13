@@ -9,7 +9,6 @@ import DeleteScheduleButton from '@/components/server/schedules/DeleteScheduleBu
 import Can from '@/components/elements/Can';
 import useFlash from '@/plugins/useFlash';
 import { ServerContext } from '@/state/server';
-import PageContentBlock from '@/components/elements/PageContentBlock';
 import tw from 'twin.macro';
 import { Button } from '@/components/elements/button/index';
 import ScheduleTaskRow from '@/components/server/schedules/ScheduleTaskRow';
@@ -17,27 +16,24 @@ import isEqual from 'react-fast-compare';
 import { format } from 'date-fns';
 import ScheduleCronRow from '@/components/server/schedules/ScheduleCronRow';
 import RunScheduleButton from '@/components/server/schedules/RunScheduleButton';
+import ServerContentBlock from '@/components/elements/ServerContentBlock';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
+import LumixCard from '@/components/lumix/LumixCard';
+import LumixStatusBadge from '@/components/lumix/LumixStatusBadge';
+import LumixMetaItem from '@/components/lumix/LumixMetaItem';
+import LumixEmptyState from '@/components/lumix/LumixEmptyState';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 interface Params {
     id: string;
 }
 
-const CronBox = ({ title, value }: { title: string; value: string }) => (
-    <div css={tw`bg-neutral-700 rounded p-3`}>
-        <p css={tw`text-neutral-300 text-sm`}>{title}</p>
-        <p css={tw`text-xl font-medium text-neutral-100`}>{value}</p>
+const CronFieldBox = ({ title, value }: { title: string; value: string }) => (
+    <div css={tw`rounded-xl border border-lumix-border/40 bg-black/20 px-3 py-3`}>
+        <p css={tw`text-2xs font-semibold uppercase tracking-wide text-lumix-muted`}>{title}</p>
+        <p css={tw`mt-1 font-mono text-sm font-medium text-[var(--lumix-text)]`}>{value}</p>
     </div>
-);
-
-const ActivePill = ({ active }: { active: boolean }) => (
-    <span
-        css={[
-            tw`rounded-full px-2 py-px text-xs ml-4 uppercase`,
-            active ? tw`bg-green-600 text-green-100` : tw`bg-red-600 text-red-100`,
-        ]}
-    >
-        {active ? 'Active' : 'Inactive'}
-    </span>
 );
 
 export default () => {
@@ -77,83 +73,143 @@ export default () => {
         setShowEditModal((s) => !s);
     }, []);
 
+    const statusBadge = !schedule
+        ? null
+        : schedule.isProcessing ? (
+              <LumixStatusBadge tone={'warning'}>
+                  <span css={tw`inline-flex items-center gap-1.5`}>
+                      <Spinner css={tw`h-3! w-3!`} />
+                      Processing
+                  </span>
+              </LumixStatusBadge>
+          ) : schedule.isActive ? (
+              <LumixStatusBadge tone={'success'}>Active</LumixStatusBadge>
+          ) : (
+              <LumixStatusBadge tone={'neutral'}>Inactive</LumixStatusBadge>
+          );
+
     return (
-        <PageContentBlock title={'Schedules'}>
+        <ServerContentBlock title={'Schedules'} showFlashKey={'schedules'}>
             <FlashMessageRender byKey={'schedules'} css={tw`mb-4`} />
             {!schedule || isLoading ? (
                 <Spinner size={'large'} centered />
             ) : (
                 <>
-                    <ScheduleCronRow cron={schedule.cron} css={tw`sm:hidden bg-neutral-700 rounded mb-4 p-3`} />
-                    <div css={tw`rounded shadow`}>
-                        <div
-                            css={tw`sm:flex items-center bg-neutral-900 p-3 sm:p-6 border-b-4 border-neutral-600 rounded-t`}
+                    <div css={tw`mb-6`}>
+                        <Button.Text
+                            type={'button'}
+                            className={'inline-flex items-center gap-2'}
+                            onClick={() => history.push(`/server/${id}/schedules`)}
                         >
-                            <div css={tw`flex-1`}>
-                                <h3 css={tw`flex items-center text-neutral-100 text-2xl`}>
-                                    {schedule.name}
-                                    {schedule.isProcessing ? (
-                                        <span
-                                            css={tw`flex items-center rounded-full px-2 py-px text-xs ml-4 uppercase bg-neutral-600 text-white`}
-                                        >
-                                            <Spinner css={tw`w-3! h-3! mr-2`} />
-                                            Processing
-                                        </span>
-                                    ) : (
-                                        <ActivePill active={schedule.isActive} />
-                                    )}
-                                </h3>
-                                <p css={tw`mt-1 text-sm text-neutral-200`}>
-                                    Last run at:&nbsp;
-                                    {schedule.lastRunAt ? (
-                                        format(schedule.lastRunAt, "MMM do 'at' h:mma")
-                                    ) : (
-                                        <span css={tw`text-neutral-300`}>n/a</span>
-                                    )}
-                                    <span css={tw`ml-4 pl-4 border-l-4 border-neutral-600 py-px`}>
-                                        Next run at:&nbsp;
-                                        {schedule.nextRunAt ? (
-                                            format(schedule.nextRunAt, "MMM do 'at' h:mma")
-                                        ) : (
-                                            <span css={tw`text-neutral-300`}>n/a</span>
-                                        )}
-                                    </span>
-                                </p>
-                            </div>
-                            <div css={tw`flex sm:block mt-3 sm:mt-0`}>
-                                <Can action={'schedule.update'}>
-                                    <Button.Text className={'flex-1 mr-4'} onClick={toggleEditModal}>
-                                        Edit
+                            <FontAwesomeIcon icon={faArrowLeft} css={tw`text-xs opacity-70`} />
+                            All schedules
+                        </Button.Text>
+                    </div>
+                    <LumixSectionHeader
+                        title={schedule.name}
+                        description={'Cron timing, power rules, and the ordered task chain for this schedule.'}
+                        actions={
+                            <Can action={'schedule.update'}>
+                                <div css={tw`flex flex-wrap items-center gap-2`}>
+                                    <Button.Text type={'button'} onClick={toggleEditModal}>
+                                        Edit schedule
                                     </Button.Text>
                                     <NewTaskButton schedule={schedule} />
-                                </Can>
+                                </div>
+                            </Can>
+                        }
+                    />
+                    <LumixCard noHover css={tw`mb-6 overflow-hidden`}>
+                        <div
+                            css={tw`flex flex-col gap-4 border-b border-lumix-border/30 bg-black/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5`}
+                        >
+                            <div css={tw`flex items-start gap-3`}>
+                                <div
+                                    css={tw`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-200 ring-1 ring-violet-400/20`}
+                                >
+                                    <FontAwesomeIcon icon={faCalendarAlt} />
+                                </div>
+                                <div css={tw`min-w-0`}>
+                                    <div css={tw`flex flex-wrap items-center gap-2`}>
+                                        <p css={tw`text-sm font-medium text-[var(--lumix-text)]`}>Status</p>
+                                        {statusBadge}
+                                    </div>
+                                    <div
+                                        css={tw`mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-2xl lg:grid-cols-2`}
+                                    >
+                                        <LumixMetaItem label={'Last run'}>
+                                            {schedule.lastRunAt ? (
+                                                <span css={tw`text-xs`}>
+                                                    {format(schedule.lastRunAt, "MMM d, yyyy h:mm a")}
+                                                </span>
+                                            ) : (
+                                                <span css={tw`text-lumix-muted`}>Never</span>
+                                            )}
+                                        </LumixMetaItem>
+                                        <LumixMetaItem label={'Next run'}>
+                                            {schedule.nextRunAt ? (
+                                                <span css={tw`text-xs`}>
+                                                    {format(schedule.nextRunAt, "MMM d, yyyy h:mm a")}
+                                                </span>
+                                            ) : (
+                                                <span css={tw`text-lumix-muted`}>—</span>
+                                            )}
+                                        </LumixMetaItem>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div css={tw`hidden sm:grid grid-cols-5 md:grid-cols-5 gap-4 mb-4 mt-4`}>
-                            <CronBox title={'Minute'} value={schedule.cron.minute} />
-                            <CronBox title={'Hour'} value={schedule.cron.hour} />
-                            <CronBox title={'Day (Month)'} value={schedule.cron.dayOfMonth} />
-                            <CronBox title={'Month'} value={schedule.cron.month} />
-                            <CronBox title={'Day (Week)'} value={schedule.cron.dayOfWeek} />
+                        <div css={tw`p-4 sm:p-5`}>
+                            <p css={tw`text-2xs font-semibold uppercase tracking-wide text-lumix-muted`}>
+                                Cron expression
+                            </p>
+                            <ScheduleCronRow
+                                cron={schedule.cron}
+                                css={tw`mt-3 rounded-xl border border-lumix-border/40 bg-black/15 p-3 sm:hidden`}
+                            />
+                            <div
+                                css={tw`mt-3 hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-5`}
+                            >
+                                <CronFieldBox title={'Minute'} value={schedule.cron.minute} />
+                                <CronFieldBox title={'Hour'} value={schedule.cron.hour} />
+                                <CronFieldBox title={'Day (month)'} value={schedule.cron.dayOfMonth} />
+                                <CronFieldBox title={'Month'} value={schedule.cron.month} />
+                                <CronFieldBox title={'Day (week)'} value={schedule.cron.dayOfWeek} />
+                            </div>
                         </div>
-                        <div css={tw`bg-neutral-700 rounded-b`}>
-                            {schedule.tasks.length > 0
-                                ? schedule.tasks
-                                      .sort((a, b) =>
-                                          a.sequenceId === b.sequenceId ? 0 : a.sequenceId > b.sequenceId ? 1 : -1
-                                      )
-                                      .map((task) => (
-                                          <ScheduleTaskRow
-                                              key={`${schedule.id}_${task.id}`}
-                                              task={task}
-                                              schedule={schedule}
-                                          />
-                                      ))
-                                : null}
-                        </div>
-                    </div>
+                    </LumixCard>
+                    <LumixSectionHeader
+                        title={'Tasks'}
+                        description={
+                            'Tasks run in order after the cron fires. Offsets wait between steps; failures can optionally continue the chain.'
+                        }
+                    />
+                    {schedule.tasks.length === 0 ? (
+                        <LumixEmptyState title={'No tasks yet'}>
+                            Add a command, power action, or backup step. The first task ignores its offset; later tasks
+                            honor the delay you set.
+                        </LumixEmptyState>
+                    ) : (
+                        <LumixCard noHover css={tw`overflow-hidden`}>
+                            <div css={tw`divide-y divide-lumix-border/30`}>
+                                {schedule.tasks
+                                    .sort((a, b) =>
+                                        a.sequenceId === b.sequenceId ? 0 : a.sequenceId > b.sequenceId ? 1 : -1
+                                    )
+                                    .map((task) => (
+                                        <ScheduleTaskRow
+                                            key={`${schedule.id}_${task.id}`}
+                                            task={task}
+                                            schedule={schedule}
+                                        />
+                                    ))}
+                            </div>
+                        </LumixCard>
+                    )}
                     <EditScheduleModal visible={showEditModal} schedule={schedule} onModalDismissed={toggleEditModal} />
-                    <div css={tw`mt-6 flex sm:justify-end`}>
+                    <div
+                        css={tw`mt-8 flex flex-col-reverse gap-3 border-t border-lumix-border/30 pt-6 sm:flex-row sm:justify-end sm:gap-2`}
+                    >
                         <Can action={'schedule.delete'}>
                             <DeleteScheduleButton
                                 scheduleId={schedule.id}
@@ -168,6 +224,6 @@ export default () => {
                     </div>
                 </>
             )}
-        </PageContentBlock>
+        </ServerContentBlock>
     );
 };

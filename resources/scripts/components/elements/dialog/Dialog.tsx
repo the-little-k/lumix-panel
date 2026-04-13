@@ -72,7 +72,11 @@ export default ({
                         open={open}
                         onClose={onDialogClose}
                     >
-                        <div className={'fixed inset-0 bg-gray-900/50 z-40'} />
+                        <div
+                            className={
+                                'pointer-events-none fixed inset-0 z-40 bg-black/65 backdrop-blur-[2px]'
+                            }
+                        />
                         <div className={'fixed inset-0 overflow-y-auto z-50'}>
                             <div
                                 ref={container}
@@ -88,17 +92,19 @@ export default ({
                                     variants={variants}
                                     className={styles.panel}
                                 >
-                                    <div className={'flex p-6 pb-0 overflow-y-auto'}>
+                                    <div className={'flex overflow-y-auto p-4 pb-0 sm:p-6 sm:pb-0'}>
                                         {iconPosition === 'container' && icon}
-                                        <div className={'flex-1 max-h-[70vh] min-w-0'}>
-                                            <div className={'flex items-center'}>
+                                        <div className={'min-w-0 max-h-[70vh] flex-1'}>
+                                            <div className={'flex items-start'}>
                                                 {iconPosition !== 'container' && icon}
-                                                <div>
+                                                <div className={'min-w-0 flex-1'}>
                                                     {title && (
                                                         <HDialog.Title className={styles.title}>{title}</HDialog.Title>
                                                     )}
                                                     {description && (
-                                                        <HDialog.Description>{description}</HDialog.Description>
+                                                        <HDialog.Description className={styles.description}>
+                                                            {description}
+                                                        </HDialog.Description>
                                                     )}
                                                 </div>
                                             </div>

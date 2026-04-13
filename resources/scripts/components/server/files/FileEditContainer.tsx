@@ -8,10 +8,10 @@ import { useHistory, useLocation, useParams } from 'react-router';
 import FileNameModal from '@/components/server/files/FileNameModal';
 import Can from '@/components/elements/Can';
 import FlashMessageRender from '@/components/FlashMessageRender';
-import PageContentBlock from '@/components/elements/PageContentBlock';
+import ServerContentBlock from '@/components/elements/ServerContentBlock';
 import { ServerError } from '@/components/elements/ScreenBlock';
 import tw from 'twin.macro';
-import Button from '@/components/elements/Button';
+import { Button } from '@/components/elements/button/index';
 import Select from '@/components/elements/Select';
 import modes from '@/modes';
 import useFlash from '@/plugins/useFlash';
@@ -20,6 +20,7 @@ import ErrorBoundary from '@/components/elements/ErrorBoundary';
 import { encodePathSegments, hashToPath } from '@/helpers';
 import { dirname } from 'pathe';
 import CodemirrorEditor from '@/components/elements/CodemirrorEditor';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
 
 export default () => {
     const [error, setError] = useState('');
@@ -84,21 +85,28 @@ export default () => {
     }
 
     return (
-        <PageContentBlock>
-            <FlashMessageRender byKey={'files:view'} css={tw`mb-4`} />
+        <ServerContentBlock title={'File editor'} showFlashKey={'files:view'} bare>
+            <LumixSectionHeader
+                title={action === 'edit' ? 'Edit file' : 'New file'}
+                description={'Syntax mode only affects highlighting. Save writes straight to disk on the node.'}
+            />
             <ErrorBoundary>
                 <div css={tw`mb-4`}>
                     <FileManagerBreadcrumbs withinFileEditor isNewFile={action !== 'edit'} />
                 </div>
             </ErrorBoundary>
             {hash.replace(/^#/, '').endsWith('.pteroignore') && (
-                <div css={tw`mb-4 p-4 border-l-4 bg-neutral-900 rounded border-cyan-400`}>
-                    <p css={tw`text-neutral-300 text-sm`}>
-                        You&apos;re editing a <code css={tw`font-mono bg-black rounded py-px px-1`}>.pteroignore</code>{' '}
+                <div
+                    css={tw`mb-4 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] px-4 py-3`}
+                >
+                    <p css={tw`text-sm leading-relaxed text-lumix-muted`}>
+                        You&apos;re editing a{' '}
+                        <code css={tw`rounded bg-black/30 px-1 font-mono text-[var(--lumix-text)]`}>.pteroignore</code>{' '}
                         file. Any files or directories listed in here will be excluded from backups. Wildcards are
-                        supported by using an asterisk (<code css={tw`font-mono bg-black rounded py-px px-1`}>*</code>).
-                        You can negate a prior rule by prepending an exclamation point (
-                        <code css={tw`font-mono bg-black rounded py-px px-1`}>!</code>).
+                        supported by using an asterisk (
+                        <code css={tw`rounded bg-black/30 px-1 font-mono text-[var(--lumix-text)]`}>*</code>). You can
+                        negate a prior rule by prepending an exclamation point (
+                        <code css={tw`rounded bg-black/30 px-1 font-mono text-[var(--lumix-text)]`}>!</code>).
                     </p>
                 </div>
             )}
@@ -129,8 +137,10 @@ export default () => {
                     }}
                 />
             </div>
-            <div css={tw`flex justify-end mt-4`}>
-                <div css={tw`flex-1 sm:flex-none rounded bg-neutral-900 mr-4`}>
+            <div css={tw`mt-4 flex justify-end`}>
+                <div
+                    css={tw`mr-4 flex-1 rounded-xl border border-lumix-border/50 bg-black/20 sm:flex-none`}
+                >
                     <Select value={mode} onChange={(e) => setMode(e.currentTarget.value)}>
                         {modes.map((mode) => (
                             <option key={`${mode.name}_${mode.mime}`} value={mode.mime}>
@@ -141,18 +151,18 @@ export default () => {
                 </div>
                 {action === 'edit' ? (
                     <Can action={'file.update'}>
-                        <Button css={tw`flex-1 sm:flex-none`} onClick={() => save()}>
-                            Save Content
+                        <Button type={'button'} className={'flex-1 sm:flex-none'} onClick={() => save()}>
+                            Save content
                         </Button>
                     </Can>
                 ) : (
                     <Can action={'file.create'}>
-                        <Button css={tw`flex-1 sm:flex-none`} onClick={() => setModalVisible(true)}>
-                            Create File
+                        <Button type={'button'} className={'flex-1 sm:flex-none'} onClick={() => setModalVisible(true)}>
+                            Create file
                         </Button>
                     </Can>
                 )}
             </div>
-        </PageContentBlock>
+        </ServerContentBlock>
     );
 };

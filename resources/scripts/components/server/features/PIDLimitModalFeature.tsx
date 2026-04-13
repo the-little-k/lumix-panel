@@ -9,6 +9,7 @@ import { SocketEvent } from '@/components/server/events';
 import { useStoreState } from 'easy-peasy';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import LumixCode from '@/components/lumix/LumixCode';
 
 const PIDLimitModalFeature = () => {
     const [visible, setVisible] = useState(false);
@@ -58,42 +59,58 @@ const PIDLimitModalFeature = () => {
             <FlashMessageRender key={'feature:pidLimit'} css={tw`mb-4`} />
             {isAdmin ? (
                 <>
-                    <div css={tw`mt-4 sm:flex items-center`}>
-                        <FontAwesomeIcon css={tw`pr-4`} icon={faExclamationTriangle} color={'orange'} size={'4x'} />
-                        <h2 css={tw`text-2xl mb-4 text-neutral-100 `}>Memory or process limit reached...</h2>
+                    <div css={tw`flex gap-4`}>
+                        <FontAwesomeIcon
+                            css={tw`shrink-0 text-amber-400`}
+                            icon={faExclamationTriangle}
+                            size={'3x'}
+                        />
+                        <div css={tw`min-w-0`}>
+                            <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>
+                                Process or memory limit reached
+                            </h2>
+                            <p css={tw`mt-3 text-sm leading-relaxed text-lumix-muted`}>
+                                This server hit the maximum process or memory limit enforced on the node.
+                            </p>
+                            <p css={tw`mt-3 text-sm leading-relaxed text-lumix-muted`}>
+                                On Wings, consider raising{' '}
+                                <LumixCode>container_pid_limit</LumixCode> in <LumixCode>config.yml</LumixCode>.
+                                Restart Wings after changes.
+                            </p>
+                            <p css={tw`mt-3 text-sm font-medium text-amber-200/90`}>
+                                Note: Wings must be restarted for configuration changes to take effect.
+                            </p>
+                        </div>
                     </div>
-                    <p css={tw`mt-4`}>This server has reached the maximum process or memory limit.</p>
-                    <p css={tw`mt-4`}>
-                        Increasing <code css={tw`font-mono bg-neutral-900`}>container_pid_limit</code> in the wings
-                        configuration, <code css={tw`font-mono bg-neutral-900`}>config.yml</code>, might help resolve
-                        this issue.
-                    </p>
-                    <p css={tw`mt-4`}>
-                        <b>Note: Wings must be restarted for the configuration file changes to take effect</b>
-                    </p>
-                    <div css={tw`mt-8 sm:flex items-center justify-end`}>
-                        <Button onClick={() => setVisible(false)} css={tw`w-full sm:w-auto border-transparent`}>
+                    <div css={tw`mt-8 flex justify-end`}>
+                        <Button onClick={() => setVisible(false)} css={tw`w-full border-transparent sm:w-auto`}>
                             Close
                         </Button>
                     </div>
                 </>
             ) : (
                 <>
-                    <div css={tw`mt-4 sm:flex items-center`}>
-                        <FontAwesomeIcon css={tw`pr-4`} icon={faExclamationTriangle} color={'orange'} size={'4x'} />
-                        <h2 css={tw`text-2xl mb-4 text-neutral-100`}>Possible resource limit reached...</h2>
+                    <div css={tw`flex gap-4`}>
+                        <FontAwesomeIcon
+                            css={tw`shrink-0 text-amber-400`}
+                            icon={faExclamationTriangle}
+                            size={'3x'}
+                        />
+                        <div css={tw`min-w-0`}>
+                            <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>
+                                Possible resource limit reached
+                            </h2>
+                            <p css={tw`mt-3 text-sm leading-relaxed text-lumix-muted`}>
+                                This server may be out of memory or hitting process limits. Contact your administrator
+                                with the error below.
+                            </p>
+                            <LumixCode variant={'block'} className={'mt-3 text-xs'}>
+                                pthread_create failed, Possibly out of memory or process/resource limits reached
+                            </LumixCode>
+                        </div>
                     </div>
-                    <p css={tw`mt-4`}>
-                        This server is attempting to use more resources than allocated. Please contact the administrator
-                        and give them the error below.
-                    </p>
-                    <p css={tw`mt-4`}>
-                        <code css={tw`font-mono bg-neutral-900`}>
-                            pthread_create failed, Possibly out of memory or process/resource limits reached
-                        </code>
-                    </p>
-                    <div css={tw`mt-8 sm:flex items-center justify-end`}>
-                        <Button onClick={() => setVisible(false)} css={tw`w-full sm:w-auto border-transparent`}>
+                    <div css={tw`mt-8 flex justify-end`}>
+                        <Button onClick={() => setVisible(false)} css={tw`w-full border-transparent sm:w-auto`}>
                             Close
                         </Button>
                     </div>

@@ -6,14 +6,16 @@ import SpinnerOverlay from '@/components/elements/SpinnerOverlay';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKey, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import deleteApiKey from '@/api/account/deleteApiKey';
-import FlashMessageRender from '@/components/FlashMessageRender';
 import { format } from 'date-fns';
 import PageContentBlock from '@/components/elements/PageContentBlock';
 import tw from 'twin.macro';
-import GreyRowBox from '@/components/elements/GreyRowBox';
 import { Dialog } from '@/components/elements/dialog';
 import { useFlashKey } from '@/plugins/useFlash';
 import Code from '@/components/elements/Code';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
+import LumixCard from '@/components/lumix/LumixCard';
+import LumixEmptyState from '@/components/lumix/LumixEmptyState';
+import LumixMetaItem from '@/components/lumix/LumixMetaItem';
 
 export default () => {
     const [deleteIdentifier, setDeleteIdentifier] = useState('');
@@ -42,13 +44,18 @@ export default () => {
     };
 
     return (
-        <PageContentBlock title={'Account API'}>
-            <FlashMessageRender byKey={'account'} />
-            <div css={tw`md:flex flex-nowrap my-10`}>
+        <PageContentBlock title={'Account API'} showFlashKey={'account'}>
+            <LumixSectionHeader
+                title={'API keys'}
+                description={
+                    'Create keys for automation and integrations. Treat them like passwords—anyone with a key can act as you within its scope.'
+                }
+            />
+            <div css={tw`md:flex md:flex-nowrap`}>
                 <ContentBox title={'Create API Key'} css={tw`flex-none w-full md:w-1/2`}>
                     <CreateApiKeyForm onKeyCreated={(key) => setKeys((s) => [...s!, key])} />
                 </ContentBox>
-                <ContentBox title={'API Keys'} css={tw`flex-1 overflow-hidden mt-8 md:mt-0 md:ml-8`}>
+                <ContentBox title={'Your keys'} css={tw`mt-8 flex-1 overflow-hidden md:mt-0 md:ml-8`}>
                     <SpinnerOverlay visible={loading} />
                     <Dialog.Confirm
                         title={'Delete API Key'}
@@ -60,34 +67,55 @@ export default () => {
                         All requests using the <Code>{deleteIdentifier}</Code> key will be invalidated.
                     </Dialog.Confirm>
                     {keys.length === 0 ? (
-                        <p css={tw`text-center text-sm`}>
-                            {loading ? 'Loading...' : 'No API keys exist for this account.'}
-                        </p>
+                        loading ? (
+                            <p css={tw`text-center text-sm text-lumix-muted`}>Loading…</p>
+                        ) : (
+                            <LumixEmptyState title={'No API keys yet'}>
+                                Create a key on the left. You can revoke access here at any time.
+                            </LumixEmptyState>
+                        )
                     ) : (
-                        keys.map((key, index) => (
-                            <GreyRowBox
-                                key={key.identifier}
-                                css={[tw`bg-neutral-600 flex items-center`, index > 0 && tw`mt-2`]}
-                            >
-                                <FontAwesomeIcon icon={faKey} css={tw`text-neutral-300`} />
-                                <div css={tw`ml-4 flex-1 overflow-hidden`}>
-                                    <p css={tw`text-sm break-words`}>{key.description}</p>
-                                    <p css={tw`text-2xs text-neutral-300 uppercase`}>
-                                        Last used:&nbsp;
-                                        {key.lastUsedAt ? format(key.lastUsedAt, 'MMM do, yyyy HH:mm') : 'Never'}
-                                    </p>
-                                </div>
-                                <p css={tw`text-sm ml-4 hidden md:block`}>
-                                    <code css={tw`font-mono py-1 px-2 bg-neutral-900 rounded`}>{key.identifier}</code>
-                                </p>
-                                <button css={tw`ml-4 p-2 text-sm`} onClick={() => setDeleteIdentifier(key.identifier)}>
-                                    <FontAwesomeIcon
-                                        icon={faTrashAlt}
-                                        css={tw`text-neutral-400 hover:text-red-400 transition-colors duration-150`}
-                                    />
-                                </button>
-                            </GreyRowBox>
-                        ))
+                        <div css={tw`flex flex-col gap-3`}>
+                            {keys.map((key) => (
+                                <LumixCard key={key.identifier} noHover css={tw`flex items-center gap-4 p-4`}>
+                                    <div
+                                        css={tw`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-200 ring-1 ring-amber-400/25`}
+                                    >
+                                        <FontAwesomeIcon icon={faKey} />
+                                    </div>
+                                    <div css={tw`min-w-0 flex-1`}>
+                                        <p css={tw`break-words text-sm font-medium text-[var(--lumix-text)]`}>
+                                            {key.description}
+                                        </p>
+                                        <div css={tw`mt-2 grid gap-2 sm:grid-cols-2`}>
+                                            <LumixMetaItem label={'Last used'}>
+                                                <span css={tw`text-xs`}>
+                                                    {key.lastUsedAt
+                                                        ? format(key.lastUsedAt, 'MMM d, yyyy HH:mm')
+                                                        : 'Never'}
+                                                </span>
+                                            </LumixMetaItem>
+                                            <LumixMetaItem label={'Identifier'}>
+                                                <code
+                                                    css={tw`font-mono text-xs text-[var(--lumix-text)]`}
+                                                >
+                                                    <span css={tw`hidden md:inline`}>{key.identifier}</span>
+                                                    <span css={tw`md:hidden`}>{key.identifier.slice(0, 12)}…</span>
+                                                </code>
+                                            </LumixMetaItem>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type={'button'}
+                                        aria-label={'Delete API key'}
+                                        css={tw`shrink-0 rounded-lg p-2 text-lumix-muted transition-colors hover:bg-red-500/10 hover:text-red-300`}
+                                        onClick={() => setDeleteIdentifier(key.identifier)}
+                                    >
+                                        <FontAwesomeIcon icon={faTrashAlt} />
+                                    </button>
+                                </LumixCard>
+                            ))}
+                        </div>
                     )}
                 </ContentBox>
             </div>

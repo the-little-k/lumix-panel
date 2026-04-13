@@ -6,7 +6,6 @@ use Illuminate\Http\Response;
 use Pterodactyl\Models\Server;
 use Pterodactyl\Models\Database;
 use Pterodactyl\Facades\Activity;
-use Pterodactyl\Exceptions\DisplayException;
 use Pterodactyl\Services\Databases\DatabasePasswordService;
 use Pterodactyl\Transformers\Api\Client\DatabaseTransformer;
 use Pterodactyl\Services\Databases\DatabaseManagementService;
@@ -50,9 +49,7 @@ class DatabaseController extends ClientApiController
     public function store(StoreDatabaseRequest $request, Server $server): array
     {
         $database = Activity::event('server:database.create')->transaction(function ($log) use ($request, $server) {
-            if ($server->databases()->lockForUpdate()->count() >= $server->database_limit) {
-                throw new DisplayException('Cannot create additional databases on this server: limit has been reached.');
-            }
+            $server->databases()->lockForUpdate();
 
             $database = $this->deployDatabaseService->handle($server, $request->validated());
 
@@ -78,7 +75,11 @@ class DatabaseController extends ClientApiController
         Activity::event('server:database.rotate-password')
             ->subject($database)
             ->property('name', $database->database)
-            ->transaction(fn () => $this->passwordService->handle($database));
+            ->transaction(function () use ($database) {
+                $database->lockForUpdate();
+
+                $this->passwordService->handle($database);
+            });
 
         return $this->fractal->item($database->refresh())
             ->parseIncludes(['password'])

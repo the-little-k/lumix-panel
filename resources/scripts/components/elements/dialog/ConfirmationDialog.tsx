@@ -13,8 +13,12 @@ export default ({ confirm = 'Okay', children, onConfirmed, ...props }: Confirmat
         <Dialog {...props} description={typeof children === 'string' ? children : undefined}>
             {typeof children !== 'string' && children}
             <Dialog.Footer>
-                <Button.Text onClick={props.onClose}>Cancel</Button.Text>
-                <Button.Danger onClick={onConfirmed}>{confirm}</Button.Danger>
+                <Button.Text type={'button'} onClick={props.onClose}>
+                    Cancel
+                </Button.Text>
+                <Button.Danger type={'button'} onClick={onConfirmed}>
+                    {confirm}
+                </Button.Danger>
             </Dialog.Footer>
         </Dialog>
     );

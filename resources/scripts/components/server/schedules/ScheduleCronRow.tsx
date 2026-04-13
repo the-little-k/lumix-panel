@@ -1,33 +1,41 @@
 import React from 'react';
 import { Schedule } from '@/api/server/schedules/getServerSchedules';
 import classNames from 'classnames';
+import tw from 'twin.macro';
+import { SerializedStyles } from '@emotion/react';
 
 interface Props {
     cron: Schedule['cron'];
     className?: string;
+    css?: SerializedStyles | SerializedStyles[];
 }
 
-const ScheduleCronRow = ({ cron, className }: Props) => (
-    <div className={classNames('flex', className)}>
-        <div className={'w-1/5 sm:w-auto text-center'}>
-            <p className={'font-medium'}>{cron.minute}</p>
-            <p className={'text-2xs text-neutral-500 uppercase'}>Minute</p>
+const cell = tw`min-w-0 text-center`;
+
+const ScheduleCronRow = ({ cron, className, css: cssProp }: Props) => (
+    <div
+        className={classNames('flex flex-wrap justify-between gap-3 sm:justify-start sm:gap-4', className)}
+        css={cssProp}
+    >
+        <div css={cell}>
+            <p css={tw`font-mono text-sm font-medium text-[var(--lumix-text)]`}>{cron.minute}</p>
+            <p css={tw`text-2xs uppercase tracking-wide text-lumix-muted`}>Minute</p>
         </div>
-        <div className={'w-1/5 sm:w-auto text-center ml-4'}>
-            <p className={'font-medium'}>{cron.hour}</p>
-            <p className={'text-2xs text-neutral-500 uppercase'}>Hour</p>
+        <div css={cell}>
+            <p css={tw`font-mono text-sm font-medium text-[var(--lumix-text)]`}>{cron.hour}</p>
+            <p css={tw`text-2xs uppercase tracking-wide text-lumix-muted`}>Hour</p>
         </div>
-        <div className={'w-1/5 sm:w-auto text-center ml-4'}>
-            <p className={'font-medium'}>{cron.dayOfMonth}</p>
-            <p className={'text-2xs text-neutral-500 uppercase'}>Day (Month)</p>
+        <div css={cell}>
+            <p css={tw`font-mono text-sm font-medium text-[var(--lumix-text)]`}>{cron.dayOfMonth}</p>
+            <p css={tw`text-2xs uppercase tracking-wide text-lumix-muted`}>Day</p>
         </div>
-        <div className={'w-1/5 sm:w-auto text-center ml-4'}>
-            <p className={'font-medium'}>{cron.month}</p>
-            <p className={'text-2xs text-neutral-500 uppercase'}>Month</p>
+        <div css={cell}>
+            <p css={tw`font-mono text-sm font-medium text-[var(--lumix-text)]`}>{cron.month}</p>
+            <p css={tw`text-2xs uppercase tracking-wide text-lumix-muted`}>Month</p>
         </div>
-        <div className={'w-1/5 sm:w-auto text-center ml-4'}>
-            <p className={'font-medium'}>{cron.dayOfWeek}</p>
-            <p className={'text-2xs text-neutral-500 uppercase'}>Day (Week)</p>
+        <div css={cell}>
+            <p css={tw`font-mono text-sm font-medium text-[var(--lumix-text)]`}>{cron.dayOfWeek}</p>
+            <p css={tw`text-2xs uppercase tracking-wide text-lumix-muted`}>Weekday</p>
         </div>
     </div>
 );

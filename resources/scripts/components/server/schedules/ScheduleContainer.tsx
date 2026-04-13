@@ -3,16 +3,17 @@ import getServerSchedules from '@/api/server/schedules/getServerSchedules';
 import { ServerContext } from '@/state/server';
 import Spinner from '@/components/elements/Spinner';
 import { useHistory, useRouteMatch } from 'react-router-dom';
-import FlashMessageRender from '@/components/FlashMessageRender';
 import ScheduleRow from '@/components/server/schedules/ScheduleRow';
 import { httpErrorToHuman } from '@/api/http';
 import EditScheduleModal from '@/components/server/schedules/EditScheduleModal';
 import Can from '@/components/elements/Can';
 import useFlash from '@/plugins/useFlash';
 import tw from 'twin.macro';
-import GreyRowBox from '@/components/elements/GreyRowBox';
 import { Button } from '@/components/elements/button/index';
 import ServerContentBlock from '@/components/elements/ServerContentBlock';
+import LumixCard from '@/components/lumix/LumixCard';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
+import LumixEmptyState from '@/components/lumix/LumixEmptyState';
 
 export default () => {
     const match = useRouteMatch();
@@ -29,7 +30,7 @@ export default () => {
     useEffect(() => {
         clearFlashes('schedules');
         getServerSchedules(uuid)
-            .then((schedules) => setSchedules(schedules))
+            .then((rows) => setSchedules(rows))
             .catch((error) => {
                 addError({ message: httpErrorToHuman(error), key: 'schedules' });
                 console.error(error);
@@ -37,42 +38,56 @@ export default () => {
             .then(() => setLoading(false));
     }, []);
 
+    const openSchedule = (id: number) => {
+        history.push(`${match.url}/${id}`);
+    };
+
     return (
-        <ServerContentBlock title={'Schedules'}>
-            <FlashMessageRender byKey={'schedules'} css={tw`mb-4`} />
-            {!schedules.length && loading ? (
-                <Spinner size={'large'} centered />
-            ) : (
-                <>
-                    {schedules.length === 0 ? (
-                        <p css={tw`text-sm text-center text-neutral-300`}>
-                            There are no schedules configured for this server.
-                        </p>
-                    ) : (
-                        schedules.map((schedule) => (
-                            <GreyRowBox
-                                as={'a'}
-                                key={schedule.id}
-                                href={`${match.url}/${schedule.id}`}
-                                css={tw`cursor-pointer mb-2 flex-wrap`}
-                                onClick={(e: any) => {
-                                    e.preventDefault();
-                                    history.push(`${match.url}/${schedule.id}`);
-                                }}
-                            >
-                                <ScheduleRow schedule={schedule} />
-                            </GreyRowBox>
-                        ))
-                    )}
+        <ServerContentBlock title={'Schedules'} showFlashKey={'schedules'}>
+            <EditScheduleModal visible={visible} onModalDismissed={() => setVisible(false)} />
+            <LumixSectionHeader
+                title={'Task schedules'}
+                description={
+                    'Automate power actions, commands, and backups on a cron timeline. Select a schedule to edit tasks and timing.'
+                }
+                actions={
                     <Can action={'schedule.create'}>
-                        <div css={tw`mt-8 flex justify-end`}>
-                            <EditScheduleModal visible={visible} onModalDismissed={() => setVisible(false)} />
-                            <Button type={'button'} onClick={() => setVisible(true)}>
-                                Create schedule
-                            </Button>
-                        </div>
+                        <Button type={'button'} onClick={() => setVisible(true)}>
+                            Create schedule
+                        </Button>
                     </Can>
-                </>
+                }
+            />
+            {!schedules.length && loading ? (
+                <div css={tw`flex justify-center py-16`}>
+                    <Spinner size={'large'} />
+                </div>
+            ) : schedules.length === 0 ? (
+                <LumixEmptyState title={'No schedules yet'}>
+                    Create a schedule to run commands or power actions on a repeating cron. You can add multiple tasks
+                    per schedule with offsets.
+                </LumixEmptyState>
+            ) : (
+                <div css={tw`flex flex-col gap-3`}>
+                    {schedules.map((schedule) => (
+                        <LumixCard
+                            key={schedule.id}
+                            noHover
+                            role={'button'}
+                            tabIndex={0}
+                            onClick={() => openSchedule(schedule.id)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    openSchedule(schedule.id);
+                                }
+                            }}
+                            css={tw`cursor-pointer p-4 ring-0 transition hover:border-indigo-500/35 hover:shadow-lg hover:shadow-indigo-500/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 sm:p-5`}
+                        >
+                            <ScheduleRow schedule={schedule} />
+                        </LumixCard>
+                    ))}
+                </div>
             )}
         </ServerContentBlock>
     );

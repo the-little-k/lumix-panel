@@ -14,6 +14,7 @@ import ModalContext from '@/context/ModalContext';
 import asModal from '@/hoc/asModal';
 import Switch from '@/components/elements/Switch';
 import ScheduleCheatsheetCards from '@/components/server/schedules/ScheduleCheatsheetCards';
+import LumixCard from '@/components/lumix/LumixCard';
 
 interface Props {
     schedule?: Schedule;
@@ -36,7 +37,7 @@ const EditScheduleModal = ({ schedule }: Props) => {
 
     const uuid = ServerContext.useStoreState((state) => state.server.data!.uuid);
     const appendSchedule = ServerContext.useStoreActions((actions) => actions.schedules.appendSchedule);
-    const [showCheatsheet, setShowCheetsheet] = useState(false);
+    const [showCheatsheet, setShowCheatsheet] = useState(false);
 
     useEffect(() => {
         return () => {
@@ -89,54 +90,77 @@ const EditScheduleModal = ({ schedule }: Props) => {
             }
         >
             {({ isSubmitting }) => (
-                <Form>
-                    <h3 css={tw`text-2xl mb-6`}>{schedule ? 'Edit schedule' : 'Create new schedule'}</h3>
-                    <FlashMessageRender byKey={'schedule:edit'} css={tw`mb-6`} />
-                    <Field
-                        name={'name'}
-                        label={'Schedule name'}
-                        description={'A human readable identifier for this schedule.'}
-                    />
-                    <div css={tw`grid grid-cols-2 sm:grid-cols-5 gap-4 mt-6`}>
-                        <Field name={'minute'} label={'Minute'} />
-                        <Field name={'hour'} label={'Hour'} />
-                        <Field name={'dayOfMonth'} label={'Day of month'} />
-                        <Field name={'month'} label={'Month'} />
-                        <Field name={'dayOfWeek'} label={'Day of week'} />
-                    </div>
-                    <p css={tw`text-neutral-400 text-xs mt-2`}>
-                        The schedule system supports the use of Cronjob syntax when defining when tasks should begin
-                        running. Use the fields above to specify when these tasks should begin running.
+                <Form css={tw`m-0`}>
+                    <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>
+                        {schedule ? 'Edit schedule' : 'Create schedule'}
+                    </h2>
+                    <p css={tw`mt-1 text-sm text-lumix-muted`}>
+                        Name this schedule and set cron fields using standard cron syntax. Tasks you add later run in
+                        sequence after each trigger.
                     </p>
-                    <div css={tw`mt-6 bg-neutral-700 border border-neutral-800 shadow-inner p-4 rounded`}>
-                        <Switch
-                            name={'show_cheatsheet'}
-                            description={'Show the cron cheatsheet for some examples.'}
-                            label={'Show Cheatsheet'}
-                            defaultChecked={showCheatsheet}
-                            onChange={() => setShowCheetsheet((s) => !s)}
-                        />
-                        {showCheatsheet && (
-                            <div css={tw`block md:flex w-full`}>
-                                <ScheduleCheatsheetCards />
+                    <FlashMessageRender byKey={'schedule:edit'} css={tw`mt-4`} />
+                    <LumixCard noHover css={tw`mt-6 overflow-hidden`}>
+                        <div css={tw`border-b border-lumix-border/30 bg-black/10 px-4 py-3 sm:px-5`}>
+                            <h3 css={tw`text-sm font-semibold text-[var(--lumix-text)]`}>Basics</h3>
+                        </div>
+                        <div css={tw`space-y-4 p-4 sm:p-5`}>
+                            <Field
+                                name={'name'}
+                                label={'Schedule name'}
+                                description={'A short label you will recognize in the list.'}
+                            />
+                        </div>
+                    </LumixCard>
+                    <LumixCard noHover css={tw`mt-4 overflow-hidden`}>
+                        <div css={tw`border-b border-lumix-border/30 bg-black/10 px-4 py-3 sm:px-5`}>
+                            <h3 css={tw`text-sm font-semibold text-[var(--lumix-text)]`}>Cron timing</h3>
+                            <p css={tw`mt-0.5 text-xs text-lumix-muted`}>
+                                Each field follows cron rules. Use the cheatsheet for common patterns.
+                            </p>
+                        </div>
+                        <div css={tw`space-y-4 p-4 sm:p-5`}>
+                            <div css={tw`grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5`}>
+                                <Field name={'minute'} label={'Minute'} />
+                                <Field name={'hour'} label={'Hour'} />
+                                <Field name={'dayOfMonth'} label={'Day (month)'} />
+                                <Field name={'month'} label={'Month'} />
+                                <Field name={'dayOfWeek'} label={'Day (week)'} />
                             </div>
-                        )}
-                    </div>
-                    <div css={tw`mt-6 bg-neutral-700 border border-neutral-800 shadow-inner p-4 rounded`}>
-                        <FormikSwitch
-                            name={'onlyWhenOnline'}
-                            description={'Only execute this schedule when the server is in a running state.'}
-                            label={'Only When Server Is Online'}
-                        />
-                    </div>
-                    <div css={tw`mt-6 bg-neutral-700 border border-neutral-800 shadow-inner p-4 rounded`}>
-                        <FormikSwitch
-                            name={'enabled'}
-                            description={'This schedule will be executed automatically if enabled.'}
-                            label={'Schedule Enabled'}
-                        />
-                    </div>
-                    <div css={tw`mt-6 text-right`}>
+                            <div css={tw`rounded-xl border border-lumix-border/40 bg-black/15 p-4`}>
+                                <Switch
+                                    name={'show_cheatsheet'}
+                                    description={'Show quick examples and special characters.'}
+                                    label={'Cron cheatsheet'}
+                                    defaultChecked={showCheatsheet}
+                                    onChange={() => setShowCheatsheet((s) => !s)}
+                                />
+                                {showCheatsheet && (
+                                    <div css={tw`mt-4`}>
+                                        <ScheduleCheatsheetCards />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </LumixCard>
+                    <LumixCard noHover css={tw`mt-4 overflow-hidden`}>
+                        <div css={tw`space-y-1 p-4 sm:p-5`}>
+                            <FormikSwitch
+                                name={'onlyWhenOnline'}
+                                description={'Skip runs while the server is stopped or installing.'}
+                                label={'Only when server is online'}
+                            />
+                        </div>
+                    </LumixCard>
+                    <LumixCard noHover css={tw`mt-4 overflow-hidden`}>
+                        <div css={tw`space-y-1 p-4 sm:p-5`}>
+                            <FormikSwitch
+                                name={'enabled'}
+                                description={'Disable to pause automatic execution without deleting tasks.'}
+                                label={'Schedule enabled'}
+                            />
+                        </div>
+                    </LumixCard>
+                    <div css={tw`mt-6 flex justify-end`}>
                         <Button className={'w-full sm:w-auto'} type={'submit'} disabled={isSubmitting}>
                             {schedule ? 'Save changes' : 'Create schedule'}
                         </Button>

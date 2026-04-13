@@ -8,10 +8,12 @@ import Can from '@/components/elements/Can';
 import useWebsocketEvent from '@/plugins/useWebsocketEvent';
 import BackupContextMenu from '@/components/server/backups/BackupContextMenu';
 import tw from 'twin.macro';
-import GreyRowBox from '@/components/elements/GreyRowBox';
 import getServerBackups from '@/api/swr/getServerBackups';
 import { ServerBackup } from '@/api/server/types';
 import { SocketEvent } from '@/components/server/events';
+import LumixCard from '@/components/lumix/LumixCard';
+import LumixStatusBadge from '@/components/lumix/LumixStatusBadge';
+import LumixMetaItem from '@/components/lumix/LumixMetaItem';
 
 interface Props {
     backup: ServerBackup;
@@ -26,9 +28,9 @@ export default ({ backup, className }: Props) => {
             const parsed = JSON.parse(data);
 
             mutate(
-                (data) => ({
-                    ...data,
-                    items: data.items.map((b) =>
+                (d) => ({
+                    ...d,
+                    items: d.items.map((b) =>
                         b.uuid !== backup.uuid
                             ? b
                             : {
@@ -47,56 +49,88 @@ export default ({ backup, className }: Props) => {
         }
     });
 
+    const inProgress = backup.completedAt === null;
+    const statusBadge = inProgress ? (
+        <LumixStatusBadge tone={'accent'}>In progress</LumixStatusBadge>
+    ) : !backup.isSuccessful ? (
+        <LumixStatusBadge tone={'danger'}>Failed</LumixStatusBadge>
+    ) : (
+        <LumixStatusBadge tone={'success'}>Completed</LumixStatusBadge>
+    );
+
+    const lockBadge =
+        backup.completedAt !== null && backup.isSuccessful && backup.isLocked ? (
+            <LumixStatusBadge tone={'warning'}>
+                <FontAwesomeIcon icon={faLock} css={tw`mr-1`} />
+                Locked
+            </LumixStatusBadge>
+        ) : null;
+
     return (
-        <GreyRowBox css={tw`flex-wrap md:flex-nowrap items-center`} className={className}>
-            <div css={tw`flex items-center truncate w-full md:flex-1`}>
-                <div css={tw`mr-4`}>
-                    {backup.completedAt !== null ? (
-                        backup.isLocked ? (
-                            <FontAwesomeIcon icon={faLock} css={tw`text-yellow-500`} />
+        <LumixCard noHover className={className} css={tw`p-4 sm:p-5`}>
+            <div css={tw`flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between`}>
+                <div css={tw`flex min-w-0 flex-1 gap-4`}>
+                    <div
+                        css={tw`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-200 ring-1 ring-cyan-400/20`}
+                    >
+                        {inProgress ? (
+                            <Spinner size={'small'} />
+                        ) : backup.isLocked && backup.isSuccessful ? (
+                            <FontAwesomeIcon icon={faLock} className={'text-lg'} />
                         ) : (
-                            <FontAwesomeIcon icon={faArchive} css={tw`text-neutral-300`} />
-                        )
-                    ) : (
-                        <Spinner size={'small'} />
-                    )}
-                </div>
-                <div css={tw`flex flex-col truncate`}>
-                    <div css={tw`flex items-center text-sm mb-1`}>
-                        {backup.completedAt !== null && !backup.isSuccessful && (
-                            <span
-                                css={tw`bg-red-500 py-px px-2 rounded-full text-white text-xs uppercase border border-red-600 mr-2`}
-                            >
-                                Failed
-                            </span>
-                        )}
-                        <p css={tw`break-words truncate`}>{backup.name}</p>
-                        {backup.completedAt !== null && backup.isSuccessful && (
-                            <span css={tw`ml-3 text-neutral-300 text-xs font-extralight hidden sm:inline`}>
-                                {bytesToString(backup.bytes)}
-                            </span>
+                            <FontAwesomeIcon icon={faArchive} className={'text-lg'} />
                         )}
                     </div>
-                    <p css={tw`mt-1 md:mt-0 text-xs text-neutral-400 font-mono truncate`}>{backup.checksum}</p>
-                </div>
-            </div>
-            <div css={tw`flex-1 md:flex-none md:w-48 mt-4 md:mt-0 md:ml-8 md:text-center`}>
-                <p title={format(backup.createdAt, 'ddd, MMMM do, yyyy HH:mm:ss')} css={tw`text-sm`}>
-                    {formatDistanceToNow(backup.createdAt, { includeSeconds: true, addSuffix: true })}
-                </p>
-                <p css={tw`text-2xs text-neutral-500 uppercase mt-1`}>Created</p>
-            </div>
-            <Can action={['backup.download', 'backup.restore', 'backup.delete']} matchAny>
-                <div css={tw`mt-4 md:mt-0 ml-6`} style={{ marginRight: '-0.5rem' }}>
-                    {!backup.completedAt ? (
-                        <div css={tw`p-2 invisible`}>
-                            <FontAwesomeIcon icon={faEllipsisH} />
+                    <div css={tw`min-w-0 flex-1`}>
+                        <div css={tw`flex flex-wrap items-center gap-2`}>
+                            <h3 css={tw`break-words text-lg font-semibold text-[var(--lumix-text)]`}>{backup.name}</h3>
+                            {statusBadge}
+                            {lockBadge}
                         </div>
-                    ) : (
-                        <BackupContextMenu backup={backup} />
-                    )}
+                        {!inProgress && backup.isSuccessful && (
+                            <p css={tw`mt-1 text-sm font-medium text-indigo-200/90`}>{bytesToString(backup.bytes)}</p>
+                        )}
+                        {backup.checksum ? (
+                            <p
+                                css={tw`mt-2 truncate font-mono text-2xs text-lumix-muted sm:max-w-2xl`}
+                                title={backup.checksum}
+                            >
+                                {backup.checksum}
+                            </p>
+                        ) : null}
+                        <div css={tw`mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2`}>
+                            <LumixMetaItem label={'Created'}>
+                                <span title={format(backup.createdAt, 'PPpp')} css={tw`text-xs`}>
+                                    {formatDistanceToNow(backup.createdAt, { includeSeconds: true, addSuffix: true })}
+                                </span>
+                            </LumixMetaItem>
+                            <LumixMetaItem label={'Finished'}>
+                                {backup.completedAt ? (
+                                    <span title={format(backup.completedAt, 'PPpp')} css={tw`text-xs`}>
+                                        {formatDistanceToNow(backup.completedAt, {
+                                            includeSeconds: true,
+                                            addSuffix: true,
+                                        })}
+                                    </span>
+                                ) : (
+                                    <span css={tw`text-lumix-muted`}>—</span>
+                                )}
+                            </LumixMetaItem>
+                        </div>
+                    </div>
                 </div>
-            </Can>
-        </GreyRowBox>
+                <Can action={['backup.download', 'backup.restore', 'backup.delete']} matchAny>
+                    <div css={tw`flex shrink-0 justify-end lg:items-start`}>
+                        {!backup.completedAt ? (
+                            <div css={tw`p-2 text-transparent`} aria-hidden>
+                                <FontAwesomeIcon icon={faEllipsisH} />
+                            </div>
+                        ) : (
+                            <BackupContextMenu backup={backup} />
+                        )}
+                    </div>
+                </Can>
+            </div>
+        </LumixCard>
     );
 };

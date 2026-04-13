@@ -18,8 +18,14 @@
     }
 }
 
+.console_toolbar {
+    @apply sticky top-0 z-10;
+    background: rgba(7, 8, 12, 0.92);
+    backdrop-filter: blur(10px);
+}
+
 .terminal {
-    @apply flex flex-col w-full;
+    @apply flex w-full flex-col;
 
     & .overflows_container {
         @apply -ml-4 sm:ml-0;
@@ -31,17 +37,18 @@
     }
 
     & > .container {
-        @apply rounded-t p-1 sm:p-2 bg-black min-h-[16rem] flex-1 font-mono text-sm;
+        @apply flex min-h-0 flex-1 rounded-none p-1 font-mono text-sm sm:p-2;
+        background: #07080c;
 
         & #terminal {
-            @apply h-full;
+            @apply h-full min-h-[10rem];
 
             &::-webkit-scrollbar-track {
                 @apply w-2;
             }
 
             &::-webkit-scrollbar-thumb {
-                @apply bg-gray-900;
+                @apply rounded-full bg-slate-700/80;
             }
         }
     }
@@ -51,13 +58,13 @@
     }
 
     & .command_input {
-        @apply relative bg-gray-900 px-2 text-gray-100 pl-10 pr-4 py-2 w-full font-mono text-sm sm:rounded-b;
+        @apply relative bg-[#0c0f16] px-2 text-slate-200 pl-10 pr-4 py-3 w-full font-mono text-sm sm:rounded-b;
         @apply focus:ring-0 outline-none focus-visible:outline-none;
         @apply border-0 border-b-2 border-transparent transition-colors duration-100;
-        @apply active:border-cyan-500 focus:border-cyan-500;
+        @apply active:border-indigo-500 focus:border-indigo-500;
     }
 }
 
 .chart_container {
-    @apply bg-gray-600 rounded shadow-lg pt-2 border-b-4 border-gray-700 relative;
+    @apply relative rounded-xl border border-lumix-border/50 bg-lumix-surface/50 pt-2 shadow-lg shadow-black/20 backdrop-blur-sm;
 }

@@ -1,7 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        <title>{{ config('app.name', 'Pterodactyl') }}</title>
+        <script>
+            (function () {
+                try {
+                    var t = localStorage.getItem('lumix-theme');
+                    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+                } catch (e) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            })();
+        </script>
+        <title>{{ config('app.name', 'Lumix Panel') }}</title>
 
         @section('meta')
             <meta charset="utf-8">
@@ -16,13 +26,13 @@
             <link rel="mask-icon" href="/favicons/safari-pinned-tab.svg" color="#bc6e3c">
             <link rel="shortcut icon" href="/favicons/favicon.ico">
             <meta name="msapplication-config" content="/favicons/browserconfig.xml">
-            <meta name="theme-color" content="#0e4688">
+            <meta name="theme-color" content="#0a0c10">
         @show
 
         @section('user-data')
             @if(!is_null(Auth::user()))
                 <script>
-                    window.PterodactylUser = {!! json_encode(Auth::user()->toVueObject()) !!};
+                    window.LumixUser = {!! json_encode(Auth::user()->toVueObject()) !!};
                 </script>
             @endif
             @if(!empty($siteConfiguration))
@@ -36,7 +46,7 @@
 
         @include('layouts.scripts')
     </head>
-    <body class="{{ $css['body'] ?? 'bg-neutral-50' }}">
+    <body class="{{ $css['body'] ?? 'bg-lumix-bg' }}">
         @section('content')
             @yield('above-container')
             @yield('container')

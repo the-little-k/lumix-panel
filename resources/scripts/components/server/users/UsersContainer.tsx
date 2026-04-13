@@ -5,12 +5,13 @@ import { ApplicationStore } from '@/state';
 import Spinner from '@/components/elements/Spinner';
 import AddSubuserButton from '@/components/server/users/AddSubuserButton';
 import UserRow from '@/components/server/users/UserRow';
-import FlashMessageRender from '@/components/FlashMessageRender';
 import getServerSubusers from '@/api/server/users/getServerSubusers';
 import { httpErrorToHuman } from '@/api/http';
 import Can from '@/components/elements/Can';
 import ServerContentBlock from '@/components/elements/ServerContentBlock';
 import tw from 'twin.macro';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
+import LumixEmptyState from '@/components/lumix/LumixEmptyState';
 
 export default () => {
     const [loading, setLoading] = useState(true);
@@ -44,21 +45,52 @@ export default () => {
     }, []);
 
     if (!subusers.length && (loading || !Object.keys(permissions).length)) {
-        return <Spinner size={'large'} centered />;
+        return (
+            <ServerContentBlock title={'Users'} showFlashKey={'users'}>
+                <div css={tw`flex justify-center py-16`}>
+                    <Spinner size={'large'} />
+                </div>
+            </ServerContentBlock>
+        );
     }
 
     return (
-        <ServerContentBlock title={'Users'}>
-            <FlashMessageRender byKey={'users'} css={tw`mb-4`} />
+        <ServerContentBlock title={'Users'} showFlashKey={'users'}>
+            <LumixSectionHeader
+                title={'Subusers'}
+                description={
+                    'Invite teammates with their own login. Each subuser gets only the permissions you grant—use edit to review the full matrix.'
+                }
+                actions={
+                    <Can action={'user.create'}>
+                        <AddSubuserButton />
+                    </Can>
+                }
+            />
             {!subusers.length ? (
-                <p css={tw`text-center text-sm text-neutral-300`}>It looks like you don&apos;t have any subusers.</p>
+                <LumixEmptyState title={'No subusers yet'}>
+                    Invite someone by email to share this server. They sign in with their own account and only see what
+                    you allow.
+                </LumixEmptyState>
             ) : (
-                subusers.map((subuser) => <UserRow key={subuser.uuid} subuser={subuser} />)
+                <div css={tw`flex flex-col gap-3`}>
+                    {subusers.map((subuser) => (
+                        <UserRow key={subuser.uuid} subuser={subuser} />
+                    ))}
+                </div>
             )}
             <Can action={'user.create'}>
-                <div css={tw`flex justify-end mt-6`}>
-                    <AddSubuserButton />
-                </div>
+                {subusers.length > 0 && (
+                    <div
+                        css={tw`mt-8 flex flex-col items-stretch justify-end gap-3 border-t border-lumix-border/30 pt-6 sm:flex-row sm:items-center`}
+                    >
+                        <p css={tw`text-sm text-lumix-muted`}>
+                            <span css={tw`font-medium text-[var(--lumix-text)]`}>{subusers.length}</span> subuser
+                            {subusers.length === 1 ? '' : 's'} on this server
+                        </p>
+                        <AddSubuserButton />
+                    </div>
+                )}
             </Can>
         </ServerContentBlock>
     );

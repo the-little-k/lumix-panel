@@ -32,11 +32,12 @@ class DatabasePasswordService
         $password = Utilities::randomStringWithSpecialCharacters(24);
 
         $this->connection->transaction(function () use ($database, $password) {
-            $database->sharedLock()->update([
+            $this->dynamic->set('dynamic', $database->database_host_id);
+
+            $this->repository->withoutFreshModel()->update($database->id, [
                 'password' => $this->encrypter->encrypt($password),
             ]);
 
-            $this->dynamic->set('dynamic', $database->database_host_id);
             $this->repository->dropUser($database->username, $database->remote);
             $this->repository->createUser($database->username, $database->remote, $password, $database->max_connections);
             $this->repository->assignUserToDatabase($database->database, $database->username, $database->remote);

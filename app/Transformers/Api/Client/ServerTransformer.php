@@ -13,12 +13,18 @@ use Pterodactyl\Models\EggVariable;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\NullResource;
 use Pterodactyl\Services\Servers\StartupCommandService;
+use Pterodactyl\Services\Servers\GetUserPermissionsService;
 
 class ServerTransformer extends BaseClientTransformer
 {
     protected array $defaultIncludes = ['allocations', 'variables'];
 
     protected array $availableIncludes = ['egg', 'subusers'];
+
+    public function __construct(private GetUserPermissionsService $permissionsService)
+    {
+        parent::__construct();
+    }
 
     public function getResourceName(): string
     {
@@ -38,6 +44,7 @@ class ServerTransformer extends BaseClientTransformer
 
         return [
             'server_owner' => $user->id === $server->owner_id,
+            'user_permissions' => $this->permissionsService->handle($server, $user),
             'identifier' => config('pterodactyl.features.new_server_identifiers')
                 ? $server->identifier
                 : $server->uuidShort,

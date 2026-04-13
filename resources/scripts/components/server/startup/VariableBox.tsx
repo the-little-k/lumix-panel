@@ -1,6 +1,5 @@
 import React, { memo, useState } from 'react';
 import { ServerEggVariable } from '@/api/server/types';
-import TitledGreyBox from '@/components/elements/TitledGreyBox';
 import { usePermissions } from '@/plugins/usePermissions';
 import InputSpinner from '@/components/elements/InputSpinner';
 import Input from '@/components/elements/Input';
@@ -13,6 +12,9 @@ import getServerStartup from '@/api/swr/getServerStartup';
 import Select from '@/components/elements/Select';
 import isEqual from 'react-fast-compare';
 import { ServerContext } from '@/state/server';
+import LumixCard from '@/components/lumix/LumixCard';
+import LumixStatusBadge from '@/components/lumix/LumixStatusBadge';
+import tw from 'twin.macro';
 
 interface Props {
     variable: ServerEggVariable;
@@ -58,20 +60,18 @@ const VariableBox = ({ variable }: Props) => {
     const selectValues = variable.rules.find((v) => v.startsWith('in:'))?.split(',') || [];
 
     return (
-        <TitledGreyBox
-            title={
-                <p className='text-sm uppercase'>
-                    {!variable.isEditable && (
-                        <span className='bg-neutral-700 text-xs py-1 px-2 rounded-full mr-2 mb-1'>Read Only</span>
-                    )}
-                    {variable.name}
-                </p>
-            }
-        >
-            <FlashMessageRender byKey={FLASH_KEY} className='mb-2 md:mb-4' />
-            <InputSpinner visible={loading}>
-                {useSwitch ? (
-                    <>
+        <LumixCard noHover css={tw`overflow-hidden`}>
+            <div css={tw`border-b border-lumix-border/30 bg-black/10 px-4 py-3 sm:px-5`}>
+                <div css={tw`flex flex-wrap items-center gap-2`}>
+                    <h3 css={tw`text-sm font-semibold text-[var(--lumix-text)]`}>{variable.name}</h3>
+                    {!variable.isEditable && <LumixStatusBadge tone={'neutral'}>Read only</LumixStatusBadge>}
+                </div>
+                <p css={tw`mt-1 font-mono text-2xs text-lumix-muted`}>{variable.envVariable}</p>
+            </div>
+            <div css={tw`p-4 sm:p-5`}>
+                <FlashMessageRender byKey={FLASH_KEY} className={'mb-4'} />
+                <InputSpinner visible={loading}>
+                    {useSwitch ? (
                         <Switch
                             readOnly={!canEdit || !variable.isEditable}
                             name={variable.envVariable}
@@ -88,48 +88,38 @@ const VariableBox = ({ variable }: Props) => {
                                 }
                             }}
                         />
-                    </>
-                ) : (
-                    <>
-                        {selectValues.length > 0 ? (
-                            <>
-                                <Select
-                                    onChange={(e) => setVariableValue(e.target.value)}
-                                    name={variable.envVariable}
-                                    defaultValue={variable.serverValue ?? variable.defaultValue}
-                                    disabled={!canEdit || !variable.isEditable}
-                                >
-                                    {selectValues.map((selectValue) => (
-                                        <option
-                                            key={selectValue.replace('in:', '')}
-                                            value={selectValue.replace('in:', '')}
-                                        >
-                                            {selectValue.replace('in:', '')}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </>
-                        ) : (
-                            <>
-                                <Input
-                                    onKeyUp={(e) => {
-                                        if (canEdit && variable.isEditable) {
-                                            setVariableValue(e.currentTarget.value);
-                                        }
-                                    }}
-                                    readOnly={!canEdit || !variable.isEditable}
-                                    name={variable.envVariable}
-                                    defaultValue={variable.serverValue ?? ''}
-                                    placeholder={variable.defaultValue}
-                                />
-                            </>
-                        )}
-                    </>
+                    ) : selectValues.length > 0 ? (
+                        <Select
+                            onChange={(e) => setVariableValue(e.target.value)}
+                            name={variable.envVariable}
+                            defaultValue={variable.serverValue ?? variable.defaultValue}
+                            disabled={!canEdit || !variable.isEditable}
+                        >
+                            {selectValues.map((selectValue) => (
+                                <option key={selectValue.replace('in:', '')} value={selectValue.replace('in:', '')}>
+                                    {selectValue.replace('in:', '')}
+                                </option>
+                            ))}
+                        </Select>
+                    ) : (
+                        <Input
+                            onKeyUp={(e) => {
+                                if (canEdit && variable.isEditable) {
+                                    setVariableValue(e.currentTarget.value);
+                                }
+                            }}
+                            readOnly={!canEdit || !variable.isEditable}
+                            name={variable.envVariable}
+                            defaultValue={variable.serverValue ?? ''}
+                            placeholder={variable.defaultValue}
+                        />
+                    )}
+                </InputSpinner>
+                {variable.description && (
+                    <p css={tw`mt-3 text-xs leading-relaxed text-lumix-muted`}>{variable.description}</p>
                 )}
-            </InputSpinner>
-
-            <p className='mt-1 text-xs text-neutral-300'>{variable.description}</p>
-        </TitledGreyBox>
+            </div>
+        </LumixCard>
     );
 };
 

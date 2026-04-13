@@ -10,43 +10,61 @@ interface Props {
     isSecondary?: boolean;
 }
 
+const focusRing = tw`focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/45 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950`;
+
 const ButtonStyle = styled.button<Omit<Props, 'isLoading'>>`
-    ${tw`relative inline-block rounded p-2 uppercase tracking-wide text-sm transition-all duration-150 border`};
+    ${tw`relative inline-flex items-center justify-center rounded-lg border font-semibold transition-all duration-150`};
+    ${focusRing};
+
+    ${(props) =>
+        props.size === 'xlarge'
+            ? tw`text-base normal-case tracking-normal`
+            : tw`text-sm uppercase tracking-wide`};
 
     ${(props) =>
         ((!props.isSecondary && !props.color) || props.color === 'primary') &&
         css<Props>`
-            ${(props) => !props.isSecondary && tw`bg-primary-500 border-primary-600 border text-primary-50`};
+            ${(props) =>
+                !props.isSecondary &&
+                tw`border-indigo-500/45 bg-indigo-600 text-white shadow-sm shadow-black/15`};
 
-            &:hover:not(:disabled) {
-                ${tw`bg-primary-600 border-primary-700`};
-            }
+            ${(props) =>
+                !props.isSecondary &&
+                css`
+                    &:hover:not(:disabled) {
+                        ${tw`border-indigo-400/55 bg-indigo-500`};
+                    }
+                `};
         `};
 
     ${(props) =>
         props.color === 'grey' &&
         css`
-            ${tw`border-neutral-600 bg-neutral-500 text-neutral-50`};
+            ${tw`border-lumix-border/60 bg-white/10 text-[var(--lumix-text)]`};
 
             &:hover:not(:disabled) {
-                ${tw`bg-neutral-600 border-neutral-700`};
+                ${tw`border-lumix-border bg-white/[0.14]`};
             }
         `};
 
     ${(props) =>
         props.color === 'green' &&
         css<Props>`
-            ${tw`border-green-600 bg-green-500 text-green-50`};
+            ${(props) => !props.isSecondary && tw`border-emerald-500/45 bg-emerald-600 text-white shadow-sm`};
 
-            &:hover:not(:disabled) {
-                ${tw`bg-green-600 border-green-700`};
-            }
+            ${(props) =>
+                !props.isSecondary &&
+                css`
+                    &:hover:not(:disabled) {
+                        ${tw`border-emerald-400/55 bg-emerald-500`};
+                    }
+                `};
 
             ${(props) =>
                 props.isSecondary &&
                 css`
                     &:active:not(:disabled) {
-                        ${tw`bg-green-600 border-green-700`};
+                        ${tw`bg-emerald-600 border-emerald-500/50`};
                     }
                 `};
         `};
@@ -54,42 +72,47 @@ const ButtonStyle = styled.button<Omit<Props, 'isLoading'>>`
     ${(props) =>
         props.color === 'red' &&
         css<Props>`
-            ${tw`border-red-600 bg-red-500 text-red-50`};
+            ${(props) => !props.isSecondary && tw`border-red-500/45 bg-red-600 text-white shadow-sm`};
 
-            &:hover:not(:disabled) {
-                ${tw`bg-red-600 border-red-700`};
-            }
+            ${(props) =>
+                !props.isSecondary &&
+                css`
+                    &:hover:not(:disabled) {
+                        ${tw`border-red-400/55 bg-red-500`};
+                    }
+                `};
 
             ${(props) =>
                 props.isSecondary &&
                 css`
                     &:active:not(:disabled) {
-                        ${tw`bg-red-600 border-red-700`};
+                        ${tw`bg-red-600 border-red-500/50`};
                     }
                 `};
         `};
 
     ${(props) => props.size === 'xsmall' && tw`px-2 py-1 text-xs`};
     ${(props) => (!props.size || props.size === 'small') && tw`px-4 py-2`};
-    ${(props) => props.size === 'large' && tw`p-4 text-sm`};
-    ${(props) => props.size === 'xlarge' && tw`p-4 w-full`};
+    ${(props) => props.size === 'large' && tw`px-5 py-3 text-sm`};
+    ${(props) => props.size === 'xlarge' && tw`w-full px-4 py-3`};
 
     ${(props) =>
         props.isSecondary &&
         css<Props>`
-            ${tw`border-neutral-600 bg-transparent text-neutral-200`};
+            ${tw`border-lumix-border/55 bg-transparent text-lumix-muted shadow-none`};
 
             &:hover:not(:disabled) {
-                ${tw`border-neutral-500 text-neutral-100`};
-                ${(props) => props.color === 'red' && tw`bg-red-500 border-red-600 text-red-50`};
-                ${(props) => props.color === 'primary' && tw`bg-primary-500 border-primary-600 text-primary-50`};
-                ${(props) => props.color === 'green' && tw`bg-green-500 border-green-600 text-green-50`};
+                ${tw`border-lumix-border bg-white/[0.04] text-[var(--lumix-text)]`};
+                ${(props) => props.color === 'red' && tw`border-red-500/35 bg-red-500/10 text-red-200`};
+                ${(props) =>
+                    (!props.color || props.color === 'primary') &&
+                    tw`border-indigo-500/30 bg-indigo-500/10 text-indigo-100`};
+                ${(props) => props.color === 'green' && tw`border-emerald-500/35 bg-emerald-500/10 text-emerald-100`};
             }
         `};
 
     &:disabled {
-        opacity: 0.55;
-        cursor: default;
+        ${tw`cursor-not-allowed opacity-55`};
     }
 `;
 
@@ -98,7 +121,7 @@ type ComponentProps = Omit<JSX.IntrinsicElements['button'], 'ref' | keyof Props>
 const Button: React.FC<ComponentProps> = ({ children, isLoading, ...props }) => (
     <ButtonStyle {...props}>
         {isLoading && (
-            <div css={tw`flex absolute justify-center items-center w-full h-full left-0 top-0`}>
+            <div css={tw`absolute left-0 top-0 flex h-full w-full items-center justify-center`}>
                 <Spinner size={'small'} />
             </div>
         )}

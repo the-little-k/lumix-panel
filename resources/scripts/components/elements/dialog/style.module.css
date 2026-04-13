@@ -3,34 +3,38 @@
 }
 
 .panel {
-    @apply relative bg-gray-600 rounded max-w-xl w-full mx-auto shadow-lg text-left;
-    @apply ring-4 ring-gray-800 ring-opacity-80;
+    @apply relative mx-auto w-full max-w-xl overflow-hidden text-left;
+    @apply rounded-2xl border border-lumix-border/80 bg-lumix-surface/95 shadow-xl shadow-black/35 backdrop-blur-xl;
 }
 
 .title {
-    @apply font-header text-xl font-medium mb-2 text-gray-50 pr-4;
+    @apply pr-10 text-xl font-semibold tracking-tight text-[var(--lumix-text)];
+}
+
+.description {
+    @apply mt-1 text-sm leading-relaxed text-lumix-muted;
 }
 
 .close_icon {
-    @apply w-5 h-5 group-hover:rotate-90 transition-transform duration-100;
+    @apply h-5 w-5 transition-transform duration-100 group-hover:rotate-90;
 }
 
 .dialog_icon {
-    @apply flex items-center justify-center w-10 h-10 rounded-full mr-4;
+    @apply mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset;
 
     &.danger {
-        @apply bg-red-500 text-red-50;
+        @apply bg-red-500/15 text-red-200 ring-red-400/35;
     }
 
     &.warning {
-        @apply bg-yellow-600 text-yellow-50;
+        @apply bg-amber-500/15 text-amber-200 ring-amber-400/35;
     }
 
     &.success {
-        @apply bg-green-600 text-green-50;
+        @apply bg-emerald-500/15 text-emerald-200 ring-emerald-400/35;
     }
 
     &.info {
-        @apply bg-primary-500 text-primary-50;
+        @apply bg-indigo-500/15 text-indigo-200 ring-indigo-400/35;
     }
 }

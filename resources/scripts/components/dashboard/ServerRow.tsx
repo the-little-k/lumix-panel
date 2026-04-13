@@ -1,71 +1,86 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEthernet, faHdd, faMemory, faMicrochip, faServer } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 import { Server } from '@/api/server/getServer';
 import getServerResourceUsage, { ServerPowerState, ServerStats } from '@/api/server/getServerResourceUsage';
+import sendServerPowerSignal from '@/api/server/sendServerPower';
 import { bytesToString, ip, mbToBytes } from '@/lib/formatters';
 import tw from 'twin.macro';
-import GreyRowBox from '@/components/elements/GreyRowBox';
 import Spinner from '@/components/elements/Spinner';
 import styled from 'styled-components/macro';
 import isEqual from 'react-fast-compare';
+import LumixCard from '@/components/lumix/LumixCard';
+import LumixStatusBadge, { LumixBadgeTone } from '@/components/lumix/LumixStatusBadge';
+import { useFlashKey } from '@/plugins/useFlash';
 
-// Determines if the current value is in an alarm threshold so we can show it in red rather
-// than the more faded default style.
 const isAlarmState = (current: number, limit: number): boolean => limit > 0 && current / (limit * 1024 * 1024) >= 0.9;
 
 const Icon = memo(
     styled(FontAwesomeIcon)<{ $alarm: boolean }>`
-        ${(props) => (props.$alarm ? tw`text-red-400` : tw`text-neutral-500`)};
+        ${(props) => (props.$alarm ? tw`text-red-400` : tw`text-lumix-muted`)};
     `,
     isEqual
 );
 
 const IconDescription = styled.p<{ $alarm: boolean }>`
-    ${tw`text-sm ml-2`};
-    ${(props) => (props.$alarm ? tw`text-white` : tw`text-neutral-400`)};
+    ${tw`ml-2 text-sm`};
+    ${(props) => (props.$alarm ? tw`text-red-100` : tw`text-lumix-muted`)};
 `;
 
-const StatusIndicatorBox = styled(GreyRowBox)<{ $status: ServerPowerState | undefined }>`
-    ${tw`grid grid-cols-12 gap-4 relative`};
-
-    & .status-bar {
-        ${tw`w-2 bg-red-500 absolute right-0 z-20 rounded-full m-1 opacity-50 transition-all duration-150`};
-        height: calc(100% - 0.5rem);
-
-        ${({ $status }) =>
-            !$status || $status === 'offline'
-                ? tw`bg-red-500`
-                : $status === 'running'
-                ? tw`bg-green-500`
-                : tw`bg-yellow-500`};
-    }
-
-    &:hover .status-bar {
-        ${tw`opacity-75`};
-    }
-`;
+function isAllowed(perms: string[], action: string): boolean {
+    return perms.includes('*') || perms.includes(action);
+}
 
 type Timer = ReturnType<typeof setInterval>;
 
+const powerTone = (status: ServerPowerState | undefined): { label: string; tone: LumixBadgeTone } => {
+    if (!status || status === 'offline') {
+        return { label: 'Offline', tone: 'danger' };
+    }
+    if (status === 'running') {
+        return { label: 'Online', tone: 'success' };
+    }
+    if (status === 'starting') {
+        return { label: 'Starting', tone: 'warning' };
+    }
+    if (status === 'stopping') {
+        return { label: 'Stopping', tone: 'warning' };
+    }
+    return { label: 'Unknown', tone: 'neutral' };
+};
+
 export default ({ server, className }: { server: Server; className?: string }) => {
     const interval = useRef<Timer>(null) as React.MutableRefObject<Timer>;
+    const { clearAndAddHttpError } = useFlashKey('dashboard');
     const [isSuspended, setIsSuspended] = useState(server.status === 'suspended');
     const [stats, setStats] = useState<ServerStats | null>(null);
+    const [pendingPower, setPendingPower] = useState<'start' | 'stop' | 'restart' | null>(null);
 
-    const getStats = () =>
-        getServerResourceUsage(server.uuid)
-            .then((data) => setStats(data))
-            .catch((error) => console.error(error));
+    const perms = server.userPermissions || [];
+    const lifecycleBlocksPower =
+        server.isTransferring ||
+        server.status === 'installing' ||
+        server.status === 'restoring_backup';
+    const showPower =
+        !lifecycleBlocksPower &&
+        (isAllowed(perms, 'control.start') ||
+            isAllowed(perms, 'control.stop') ||
+            isAllowed(perms, 'control.restart'));
+
+    const getStats = useCallback(
+        () =>
+            getServerResourceUsage(server.uuid)
+                .then((data) => setStats(data))
+                .catch((error) => console.error(error)),
+        [server.uuid]
+    );
 
     useEffect(() => {
         setIsSuspended(stats?.isSuspended || server.status === 'suspended');
     }, [stats?.isSuspended, server.status]);
 
     useEffect(() => {
-        // Don't waste a HTTP request if there is nothing important to show to the user because
-        // the server is suspended.
         if (isSuspended) return;
 
         getStats().then(() => {
@@ -75,7 +90,19 @@ export default ({ server, className }: { server: Server; className?: string }) =
         return () => {
             interval.current && clearInterval(interval.current);
         };
-    }, [isSuspended]);
+    }, [isSuspended, getStats]);
+
+    const runPower = (signal: 'start' | 'stop' | 'restart') => {
+        setPendingPower(signal);
+        sendServerPowerSignal(server.uuid, signal)
+            .then(() => {
+                window.setTimeout(() => getStats(), 900);
+            })
+            .catch((error) => {
+                clearAndAddHttpError(error);
+            })
+            .finally(() => setPendingPower(null));
+    };
 
     const alarms = { cpu: false, memory: false, disk: false };
     if (stats) {
@@ -88,89 +115,147 @@ export default ({ server, className }: { server: Server; className?: string }) =
     const memoryLimit = server.limits.memory !== 0 ? bytesToString(mbToBytes(server.limits.memory)) : 'Unlimited';
     const cpuLimit = server.limits.cpu !== 0 ? server.limits.cpu + ' %' : 'Unlimited';
 
+    const status = stats?.status;
+    const { label: statusLabel, tone: statusTone } = powerTone(status);
+    const powerBusy = pendingPower !== null;
+
     return (
-        <StatusIndicatorBox as={Link} to={`/server/${server.id}`} className={className} $status={stats?.status}>
-            <div css={tw`flex items-center col-span-12 sm:col-span-5 lg:col-span-6`}>
-                <div className={'icon mr-4'}>
-                    <FontAwesomeIcon icon={faServer} />
+        <LumixCard className={className}>
+            <div css={tw`relative z-10 flex flex-col gap-4 p-5`}>
+                <div css={tw`flex flex-col gap-4 xl:flex-row xl:items-start`}>
+                    <Link to={`/server/${server.id}`} css={tw`group flex min-w-0 flex-1 flex-col gap-2 no-underline`}>
+                        <div css={tw`flex items-start gap-3`}>
+                            <div
+                                css={tw`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-200 ring-1 ring-indigo-400/20 transition group-hover:bg-indigo-500/20`}
+                            >
+                                <FontAwesomeIcon icon={faServer} />
+                            </div>
+                            <div css={tw`min-w-0 flex-1`}>
+                                <div css={tw`flex flex-wrap items-center gap-2`}>
+                                    <h3 css={tw`truncate text-lg font-semibold text-[var(--lumix-text)]`}>{server.name}</h3>
+                                    {stats && !isSuspended && <LumixStatusBadge tone={statusTone}>{statusLabel}</LumixStatusBadge>}
+                                </div>
+                                {!!server.description && (
+                                    <p css={tw`mt-1 line-clamp-2 text-sm text-lumix-muted`}>{server.description}</p>
+                                )}
+                                <div css={tw`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-lumix-muted`}>
+                                    <FontAwesomeIcon icon={faEthernet} css={tw`text-indigo-300/80`} />
+                                    <span>
+                                        {server.allocations
+                                            .filter((alloc) => alloc.isDefault)
+                                            .map((allocation) => (
+                                                <React.Fragment key={allocation.ip + allocation.port.toString()}>
+                                                    {allocation.alias || ip(allocation.ip)}:{allocation.port}
+                                                </React.Fragment>
+                                            ))}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+
+                    {showPower && !isSuspended && (
+                        <div
+                            css={tw`flex shrink-0 flex-wrap items-center justify-end gap-2 xl:flex-col xl:items-stretch`}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {isAllowed(perms, 'control.start') && (
+                                <button
+                                    type={'button'}
+                                    disabled={powerBusy || status !== 'offline'}
+                                    css={tw`rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wide text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40`}
+                                    onClick={() => runPower('start')}
+                                >
+                                    {pendingPower === 'start' ? '…' : 'Start'}
+                                </button>
+                            )}
+                            {isAllowed(perms, 'control.restart') && (
+                                <button
+                                    type={'button'}
+                                    disabled={powerBusy || !status || status === 'offline'}
+                                    css={tw`rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wide text-indigo-200 transition enabled:hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-40`}
+                                    onClick={() => runPower('restart')}
+                                >
+                                    {pendingPower === 'restart' ? '…' : 'Restart'}
+                                </button>
+                            )}
+                            {isAllowed(perms, 'control.stop') && (
+                                <button
+                                    type={'button'}
+                                    disabled={
+                                        powerBusy ||
+                                        status === 'offline' ||
+                                        !status ||
+                                        status === 'stopping'
+                                    }
+                                    css={tw`rounded-lg border border-red-500/35 bg-red-500/10 px-3 py-1.5 text-2xs font-semibold uppercase tracking-wide text-red-200 transition enabled:hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40`}
+                                    onClick={() => runPower('stop')}
+                                >
+                                    {pendingPower === 'stop' ? '…' : 'Stop'}
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
-                <div>
-                    <p css={tw`text-lg break-words`}>{server.name}</p>
-                    {!!server.description && (
-                        <p css={tw`text-sm text-neutral-300 break-words line-clamp-2`}>{server.description}</p>
+
+                <div css={tw`rounded-xl border border-lumix-border/50 bg-black/20 px-4 py-3 sm:px-5`}>
+                    {!stats || isSuspended ? (
+                        isSuspended ? (
+                            <div css={tw`flex justify-center`}>
+                                <LumixStatusBadge tone={'danger'}>
+                                    {server.status === 'suspended' ? 'Suspended' : 'Connection Error'}
+                                </LumixStatusBadge>
+                            </div>
+                        ) : server.isTransferring || server.status ? (
+                            <div css={tw`flex justify-center`}>
+                                <LumixStatusBadge tone={'neutral'}>
+                                    {server.isTransferring
+                                        ? 'Transferring'
+                                        : server.status === 'installing'
+                                        ? 'Installing'
+                                        : server.status === 'restoring_backup'
+                                        ? 'Restoring Backup'
+                                        : 'Unavailable'}
+                                </LumixStatusBadge>
+                            </div>
+                        ) : (
+                            <div css={tw`flex justify-center py-2`}>
+                                <Spinner size={'small'} />
+                            </div>
+                        )
+                    ) : (
+                        <div css={tw`grid grid-cols-1 gap-4 sm:grid-cols-3`}>
+                            <div css={tw`flex items-center justify-center sm:block`}>
+                                <div css={tw`flex justify-center`}>
+                                    <Icon icon={faMicrochip} $alarm={alarms.cpu} />
+                                    <IconDescription $alarm={alarms.cpu}>
+                                        {stats.cpuUsagePercent.toFixed(1)}%
+                                    </IconDescription>
+                                </div>
+                                <p css={tw`mt-1 text-center text-2xs text-lumix-muted`}>CPU · {cpuLimit}</p>
+                            </div>
+                            <div css={tw`flex items-center justify-center sm:block`}>
+                                <div css={tw`flex justify-center`}>
+                                    <Icon icon={faMemory} $alarm={alarms.memory} />
+                                    <IconDescription $alarm={alarms.memory}>
+                                        {bytesToString(stats.memoryUsageInBytes)}
+                                    </IconDescription>
+                                </div>
+                                <p css={tw`mt-1 text-center text-2xs text-lumix-muted`}>RAM · {memoryLimit}</p>
+                            </div>
+                            <div css={tw`flex items-center justify-center sm:block`}>
+                                <div css={tw`flex justify-center`}>
+                                    <Icon icon={faHdd} $alarm={alarms.disk} />
+                                    <IconDescription $alarm={alarms.disk}>
+                                        {bytesToString(stats.diskUsageInBytes)}
+                                    </IconDescription>
+                                </div>
+                                <p css={tw`mt-1 text-center text-2xs text-lumix-muted`}>Disk · {diskLimit}</p>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
-            <div css={tw`flex-1 ml-4 lg:block lg:col-span-2 hidden`}>
-                <div css={tw`flex justify-center`}>
-                    <FontAwesomeIcon icon={faEthernet} css={tw`text-neutral-500`} />
-                    <p css={tw`text-sm text-neutral-400 ml-2`}>
-                        {server.allocations
-                            .filter((alloc) => alloc.isDefault)
-                            .map((allocation) => (
-                                <React.Fragment key={allocation.ip + allocation.port.toString()}>
-                                    {allocation.alias || ip(allocation.ip)}:{allocation.port}
-                                </React.Fragment>
-                            ))}
-                    </p>
-                </div>
-            </div>
-            <div css={tw`hidden col-span-7 lg:col-span-4 sm:flex items-baseline justify-center`}>
-                {!stats || isSuspended ? (
-                    isSuspended ? (
-                        <div css={tw`flex-1 text-center`}>
-                            <span css={tw`bg-red-500 rounded px-2 py-1 text-red-100 text-xs`}>
-                                {server.status === 'suspended' ? 'Suspended' : 'Connection Error'}
-                            </span>
-                        </div>
-                    ) : server.isTransferring || server.status ? (
-                        <div css={tw`flex-1 text-center`}>
-                            <span css={tw`bg-neutral-500 rounded px-2 py-1 text-neutral-100 text-xs`}>
-                                {server.isTransferring
-                                    ? 'Transferring'
-                                    : server.status === 'installing'
-                                    ? 'Installing'
-                                    : server.status === 'restoring_backup'
-                                    ? 'Restoring Backup'
-                                    : 'Unavailable'}
-                            </span>
-                        </div>
-                    ) : (
-                        <Spinner size={'small'} />
-                    )
-                ) : (
-                    <React.Fragment>
-                        <div css={tw`flex-1 ml-4 sm:block hidden`}>
-                            <div css={tw`flex justify-center`}>
-                                <Icon icon={faMicrochip} $alarm={alarms.cpu} />
-                                <IconDescription $alarm={alarms.cpu}>
-                                    {stats.cpuUsagePercent.toFixed(2)} %
-                                </IconDescription>
-                            </div>
-                            <p css={tw`text-xs text-neutral-600 text-center mt-1`}>of {cpuLimit}</p>
-                        </div>
-                        <div css={tw`flex-1 ml-4 sm:block hidden`}>
-                            <div css={tw`flex justify-center`}>
-                                <Icon icon={faMemory} $alarm={alarms.memory} />
-                                <IconDescription $alarm={alarms.memory}>
-                                    {bytesToString(stats.memoryUsageInBytes)}
-                                </IconDescription>
-                            </div>
-                            <p css={tw`text-xs text-neutral-600 text-center mt-1`}>of {memoryLimit}</p>
-                        </div>
-                        <div css={tw`flex-1 ml-4 sm:block hidden`}>
-                            <div css={tw`flex justify-center`}>
-                                <Icon icon={faHdd} $alarm={alarms.disk} />
-                                <IconDescription $alarm={alarms.disk}>
-                                    {bytesToString(stats.diskUsageInBytes)}
-                                </IconDescription>
-                            </div>
-                            <p css={tw`text-xs text-neutral-600 text-center mt-1`}>of {diskLimit}</p>
-                        </div>
-                    </React.Fragment>
-                )}
-            </div>
-            <div className={'status-bar'} />
-        </StatusIndicatorBox>
+        </LumixCard>
     );
 };

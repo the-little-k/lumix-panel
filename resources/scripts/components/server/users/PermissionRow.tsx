@@ -6,19 +6,19 @@ import { useStoreState } from 'easy-peasy';
 import Label from '@/components/elements/Label';
 
 const Container = styled.label`
-    ${tw`flex items-center border border-transparent rounded md:p-2 transition-colors duration-75`};
+    ${tw`flex items-center rounded-xl border border-lumix-border/30 transition-colors duration-75 md:p-2`};
     text-transform: none;
 
     &:not(.disabled) {
         ${tw`cursor-pointer`};
 
         &:hover {
-            ${tw`border-neutral-500 bg-neutral-800`};
+            ${tw`border-indigo-500/25 bg-white/[0.04] shadow-sm shadow-indigo-500/5`};
         }
     }
 
     &:not(:first-of-type) {
-        ${tw`mt-4 sm:mt-2`};
+        ${tw`mt-3 sm:mt-2`};
     }
 
     &.disabled {
@@ -46,16 +46,16 @@ const PermissionRow = ({ permission, disabled }: Props) => {
                     id={`permission_${permission}`}
                     name={'permissions'}
                     value={permission}
-                    css={tw`w-5 h-5 mr-2`}
+                    css={tw`mr-2 h-5 w-5`}
                     disabled={disabled}
                 />
             </div>
-            <div css={tw`flex-1`}>
-                <Label as={'p'} css={tw`font-medium`}>
+            <div css={tw`min-w-0 flex-1`}>
+                <Label as={'p'} css={tw`font-medium text-[var(--lumix-text)]`}>
                     {pkey}
                 </Label>
                 {permissions[key].keys[pkey].length > 0 && (
-                    <p css={tw`text-xs text-neutral-400 mt-1`}>{permissions[key].keys[pkey]}</p>
+                    <p css={tw`mt-1 text-xs leading-relaxed text-lumix-muted`}>{permissions[key].keys[pkey]}</p>
                 )}
             </div>
         </Container>

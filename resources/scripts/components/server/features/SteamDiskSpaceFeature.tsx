@@ -7,6 +7,7 @@ import FlashMessageRender from '@/components/FlashMessageRender';
 import useFlash from '@/plugins/useFlash';
 import { SocketEvent } from '@/components/server/events';
 import { useStoreState } from 'easy-peasy';
+import LumixCode from '@/components/lumix/LumixCode';
 
 const SteamDiskSpaceFeature = () => {
     const [visible, setVisible] = useState(false);
@@ -49,35 +50,33 @@ const SteamDiskSpaceFeature = () => {
             <FlashMessageRender key={'feature:steamDiskSpace'} css={tw`mb-4`} />
             {isAdmin ? (
                 <>
-                    <div css={tw`mt-4 sm:flex items-center`}>
-                        <h2 css={tw`text-2xl mb-4 text-neutral-100 `}>Out of available disk space...</h2>
-                    </div>
-                    <p css={tw`mt-4`}>
-                        This server has run out of available disk space and cannot complete the install or update
-                        process.
+                    <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>
+                        Out of disk space
+                    </h2>
+                    <p css={tw`mt-3 text-sm leading-relaxed text-lumix-muted`}>
+                        This server cannot finish installing or updating because the node is out of free space.
                     </p>
-                    <p css={tw`mt-4`}>
-                        Ensure the machine has enough disk space by typing{' '}
-                        <code css={tw`font-mono bg-neutral-900 rounded py-1 px-2`}>df -h</code> on the machine hosting
-                        this server. Delete files or increase the available disk space to resolve the issue.
+                    <p css={tw`mt-3 text-sm leading-relaxed text-lumix-muted`}>
+                        On the host machine, run <LumixCode>df -h</LumixCode> to inspect volumes. Free space or expand
+                        storage, then retry.
                     </p>
-                    <div css={tw`mt-8 sm:flex items-center justify-end`}>
-                        <Button onClick={() => setVisible(false)} css={tw`w-full sm:w-auto border-transparent`}>
+                    <div css={tw`mt-8 flex justify-end`}>
+                        <Button onClick={() => setVisible(false)} css={tw`w-full border-transparent sm:w-auto`}>
                             Close
                         </Button>
                     </div>
                 </>
             ) : (
                 <>
-                    <div css={tw`mt-4 sm:flex items-center`}>
-                        <h2 css={tw`text-2xl mb-4 text-neutral-100`}>Out of available disk space...</h2>
-                    </div>
-                    <p css={tw`mt-4`}>
-                        This server has run out of available disk space and cannot complete the install or update
-                        process. Please get in touch with the administrator(s) and inform them of disk space issues.
+                    <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>
+                        Out of disk space
+                    </h2>
+                    <p css={tw`mt-3 text-sm leading-relaxed text-lumix-muted`}>
+                        This server cannot finish installing or updating because disk space was exhausted. Please contact
+                        your host.
                     </p>
-                    <div css={tw`mt-8 sm:flex items-center justify-end`}>
-                        <Button onClick={() => setVisible(false)} css={tw`w-full sm:w-auto border-transparent`}>
+                    <div css={tw`mt-8 flex justify-end`}>
+                        <Button onClick={() => setVisible(false)} css={tw`w-full border-transparent sm:w-auto`}>
                             Close
                         </Button>
                     </div>

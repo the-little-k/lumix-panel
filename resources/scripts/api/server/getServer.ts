@@ -60,6 +60,9 @@ export interface Server {
     isTransferring: boolean;
     variables: ServerEggVariable[];
     allocations: Allocation[];
+    /** Present on client API list/detail attributes for permission-aware UI. */
+    serverOwner: boolean;
+    userPermissions: string[];
 }
 
 export const rawDataToServerObject = ({ attributes: data }: FractalResponseData): Server => ({
@@ -89,18 +92,23 @@ export const rawDataToServerObject = ({ attributes: data }: FractalResponseData)
     allocations: ((data.relationships?.allocations as FractalResponseList | undefined)?.data || []).map(
         rawDataToServerAllocation
     ),
+    serverOwner: Boolean(data.server_owner),
+    userPermissions: Array.isArray(data.user_permissions) ? data.user_permissions : [],
 });
 
 export default (uuid: string): Promise<[Server, string[]]> => {
     return new Promise((resolve, reject) => {
-        http.get(`/api/client/servers/${uuid}`)
-            .then(({ data }) =>
-                resolve([
-                    rawDataToServerObject(data),
-                    // eslint-disable-next-line camelcase
-                    data.meta?.is_server_owner ? ['*'] : data.meta?.user_permissions || [],
-                ])
-            )
+        http.get(`/api/client/servers/${uuid}`).then(({ data: response }) => {
+                const server = rawDataToServerObject(response);
+                const permissions =
+                    server.userPermissions.length > 0
+                        ? server.userPermissions
+                        : // eslint-disable-next-line camelcase
+                        response.meta?.is_server_owner
+                        ? ['*']
+                        : response.meta?.user_permissions || [];
+                resolve([{ ...server, userPermissions: permissions }, permissions]);
+            })
             .catch(reject);
     });
 };

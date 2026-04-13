@@ -9,6 +9,7 @@ import tw from 'twin.macro';
 import Button from '@/components/elements/Button';
 import useFileManagerSwr from '@/plugins/useFileManagerSwr';
 import useFlash from '@/plugins/useFlash';
+import LumixCode from '@/components/lumix/LumixCode';
 
 interface FormikValues {
     name: string;
@@ -29,10 +30,8 @@ const RenameFileModal = ({ files, useMoveTerminology, ...props }: OwnProps) => {
         const len = name.split('/').length;
         if (files.length === 1) {
             if (!useMoveTerminology && len === 1) {
-                // Rename the file within this directory.
                 mutate((data) => data.map((f) => (f.name === files[0] ? { ...f, name } : f)), false);
             } else if (useMoveTerminology || len > 1) {
-                // Remove the file from this directory since they moved it elsewhere.
                 mutate((data) => data.filter((f) => f.name !== files[0]), false);
             }
         }
@@ -59,31 +58,46 @@ const RenameFileModal = ({ files, useMoveTerminology, ...props }: OwnProps) => {
         <Formik onSubmit={submit} initialValues={{ name: files.length > 1 ? '' : files[0] || '' }}>
             {({ isSubmitting, values }) => (
                 <Modal {...props} dismissable={!isSubmitting} showSpinnerOverlay={isSubmitting}>
-                    <Form css={tw`m-0`}>
-                        <div css={[tw`flex flex-wrap`, useMoveTerminology ? tw`items-center` : tw`items-end`]}>
-                            <div css={tw`w-full sm:flex-1 sm:mr-4`}>
+                    <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>
+                        {useMoveTerminology ? 'Move' : 'Rename'}{' '}
+                        {files.length === 1 ? 'item' : `${files.length} items`}
+                    </h2>
+                    <p css={tw`mt-1 text-sm text-lumix-muted`}>
+                        {useMoveTerminology
+                            ? 'Destination is relative to the current directory.'
+                            : 'New name stays in this folder unless you include a path.'}
+                    </p>
+                    <Form css={tw`m-0 mt-4`}>
+                        <div css={[tw`flex flex-col gap-4`, useMoveTerminology ? tw`sm:items-stretch` : tw`sm:items-end sm:flex-row`]}>
+                            <div css={tw`w-full flex-1`}>
                                 <Field
                                     type={'string'}
                                     id={'file_name'}
                                     name={'name'}
-                                    label={'File Name'}
+                                    label={useMoveTerminology ? 'Destination' : 'New name'}
                                     description={
                                         useMoveTerminology
-                                            ? 'Enter the new name and directory of this file or folder, relative to the current directory.'
+                                            ? 'Path relative to the current directory (e.g. ../backup or subfolder/name).'
                                             : undefined
                                     }
                                     autoFocus
                                 />
                             </div>
-                            <div css={tw`w-full sm:w-auto mt-4 sm:mt-0`}>
-                                <Button css={tw`w-full`}>{useMoveTerminology ? 'Move' : 'Rename'}</Button>
+                            <div css={tw`flex w-full justify-end sm:w-auto`}>
+                                <Button type={'submit'} css={tw`w-full sm:w-auto`}>
+                                    {useMoveTerminology ? 'Move' : 'Rename'}
+                                </Button>
                             </div>
                         </div>
                         {useMoveTerminology && (
-                            <p css={tw`text-xs mt-2 text-neutral-400`}>
-                                <strong css={tw`text-neutral-200`}>New location:</strong>
-                                &nbsp;/home/container/{join(directory, values.name).replace(/^(\.\.\/|\/)+/, '')}
-                            </p>
+                            <div css={tw`mt-4`}>
+                                <p css={tw`text-2xs font-semibold uppercase tracking-wide text-lumix-muted`}>
+                                    Preview path
+                                </p>
+                                <LumixCode variant={'block'} className={'mt-1.5 text-xs'}>
+                                    /home/container/{join(directory, values.name).replace(/^(\.\.\/|\/)+/, '')}
+                                </LumixCode>
+                            </div>
                         )}
                     </Form>
                 </Modal>

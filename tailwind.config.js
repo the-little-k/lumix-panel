@@ -24,12 +24,18 @@ module.exports = {
             },
             colors: {
                 black: '#131a20',
-                // "primary" and "neutral" are deprecated, prefer the use of "blue" and "gray"
-                // in new code.
                 primary: colors.blue,
                 gray: gray,
                 neutral: gray,
                 cyan: colors.cyan,
+                lumix: {
+                    bg: 'var(--lumix-bg)',
+                    surface: 'var(--lumix-surface)',
+                    border: 'var(--lumix-border)',
+                    accent: 'var(--lumix-accent)',
+                    glow: 'var(--lumix-glow)',
+                    muted: 'var(--lumix-muted)',
+                },
             },
             fontSize: {
                 '2xs': '0.625rem',
@@ -40,6 +46,13 @@ module.exports = {
             borderColor: theme => ({
                 default: theme('colors.neutral.400', 'currentColor'),
             }),
+            boxShadow: {
+                lumix: '0 0 40px -12px var(--lumix-glow-soft)',
+            },
+            backgroundImage: {
+                'lumix-gradient':
+                    'radial-gradient(1200px 600px at 10% -20%, var(--lumix-glow-soft), transparent 55%), radial-gradient(900px 500px at 100% 0%, rgba(99, 102, 241, 0.08), transparent 50%)',
+            },
         },
     },
     plugins: [

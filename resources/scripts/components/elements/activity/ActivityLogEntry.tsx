@@ -6,11 +6,10 @@ import { format, formatDistanceToNowStrict } from 'date-fns';
 import { ActivityLog } from '@definitions/user';
 import ActivityLogMetaButton from '@/components/elements/activity/ActivityLogMetaButton';
 import { FolderOpenIcon, TerminalIcon } from '@heroicons/react/solid';
-import classNames from 'classnames';
-import style from './style.module.css';
 import Avatar from '@/components/Avatar';
 import useLocationHash from '@/plugins/useLocationHash';
 import { getObjectKeys, isObject } from '@/lib/objects';
+import tw from 'twin.macro';
 
 interface Props {
     activity: ActivityLog;
@@ -44,51 +43,67 @@ export default ({ activity, children }: Props) => {
     const properties = wrapProperties(activity.properties);
 
     return (
-        <div className={'grid grid-cols-10 py-4 border-b-2 border-gray-800 last:rounded-b last:border-0 group'}>
-            <div className={'hidden sm:flex sm:col-span-1 items-center justify-center select-none'}>
-                <div className={'flex items-center w-10 h-10 rounded-full bg-gray-600 overflow-hidden'}>
+        <div
+            css={tw`group grid grid-cols-10 gap-2 border-b border-lumix-border/30 py-4 last:border-b-0`}
+        >
+            <div css={tw`hidden select-none sm:col-span-1 sm:flex sm:items-center sm:justify-center`}>
+                <div
+                    css={tw`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-lumix-border/40`}
+                >
                     <Avatar name={actor?.uuid || 'system'} />
                 </div>
             </div>
-            <div className={'col-span-10 sm:col-span-9 flex'}>
-                <div className={'flex-1 px-4 sm:px-0'}>
-                    <div className={'flex items-center text-gray-50'}>
+            <div css={tw`col-span-10 flex sm:col-span-9`}>
+                <div css={tw`min-w-0 flex-1 px-2 sm:px-0`}>
+                    <div css={tw`flex flex-wrap items-center text-[var(--lumix-text)]`}>
                         <Tooltip placement={'top'} content={actor?.email || 'System User'}>
-                            <span>{actor?.username || 'System'}</span>
+                            <span css={tw`font-medium`}>{actor?.username || 'System'}</span>
                         </Tooltip>
-                        <span className={'text-gray-400'}>&nbsp;&mdash;&nbsp;</span>
+                        <span css={tw`text-lumix-muted`}>&nbsp;&mdash;&nbsp;</span>
                         <Link
                             to={`#${pathTo({ event: activity.event })}`}
-                            className={'transition-colors duration-75 active:text-cyan-400 hover:text-cyan-400'}
+                            css={tw`transition-colors duration-75 hover:text-indigo-300 active:text-indigo-400`}
                         >
                             {activity.event}
                         </Link>
-                        <div className={classNames(style.icons, 'group-hover:text-gray-300')}>
+                        <div
+                            css={tw`ml-2 flex space-x-1 text-lumix-muted transition-colors duration-100 group-hover:text-[var(--lumix-text)]`}
+                        >
                             {activity.isApi && (
                                 <Tooltip placement={'top'} content={'Using API Key'}>
-                                    <TerminalIcon />
+                                    <span css={tw`inline-flex`}>
+                                        <TerminalIcon css={tw`h-5 w-auto cursor-help px-1 py-px hover:text-indigo-200`} />
+                                    </span>
                                 </Tooltip>
                             )}
                             {activity.event.startsWith('server:sftp.') && (
                                 <Tooltip placement={'top'} content={'Using SFTP'}>
-                                    <FolderOpenIcon />
+                                    <span css={tw`inline-flex`}>
+                                        <FolderOpenIcon
+                                            css={tw`h-5 w-auto cursor-help px-1 py-px hover:text-indigo-200`}
+                                        />
+                                    </span>
                                 </Tooltip>
                             )}
                             {children}
                         </div>
                     </div>
-                    <p className={style.description}>
+                    <p
+                        css={tw`mt-1 line-clamp-2 break-words pr-4 text-sm leading-snug text-lumix-muted [&_strong]:break-all [&_strong]:font-semibold [&_strong]:text-[var(--lumix-text)]`}
+                    >
                         <Translate ns={'activity'} values={properties} i18nKey={activity.event.replace(':', '.')} />
                     </p>
-                    <div className={'mt-1 flex items-center text-sm'}>
+                    <div css={tw`mt-1.5 flex flex-wrap items-center gap-x-1 text-sm text-lumix-muted`}>
                         {activity.ip && (
-                            <span>
-                                {activity.ip}
-                                <span className={'text-gray-400'}>&nbsp;|&nbsp;</span>
-                            </span>
+                            <>
+                                <span css={tw`font-mono text-xs text-[var(--lumix-text)]`}>{activity.ip}</span>
+                                <span css={tw`text-lumix-muted`}>|</span>
+                            </>
                         )}
                         <Tooltip placement={'right'} content={format(activity.timestamp, 'MMM do, yyyy H:mm:ss')}>
-                            <span>{formatDistanceToNowStrict(activity.timestamp, { addSuffix: true })}</span>
+                            <span css={tw`text-xs`}>
+                                {formatDistanceToNowStrict(activity.timestamp, { addSuffix: true })}
+                            </span>
                         </Tooltip>
                     </div>
                 </div>

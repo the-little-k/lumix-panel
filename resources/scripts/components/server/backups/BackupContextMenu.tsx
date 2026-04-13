@@ -138,8 +138,8 @@ export default ({ backup }: Props) => {
                     Your server will be stopped. You will not be able to control the power state, access the file
                     manager, or create additional backups until completed.
                 </p>
-                <p css={tw`mt-4 -mb-2 bg-gray-700 p-3 rounded`}>
-                    <label htmlFor={'restore_truncate'} css={tw`text-base flex items-center cursor-pointer`}>
+                <p css={tw`mt-4 -mb-2 rounded-xl border border-lumix-border/40 bg-black/25 p-3`}>
+                    <label htmlFor={'restore_truncate'} css={tw`flex cursor-pointer items-center text-sm text-[var(--lumix-text)]`}>
                         <Input
                             type={'checkbox'}
                             css={tw`text-red-500! w-5! h-5! mr-2`}
@@ -166,8 +166,9 @@ export default ({ backup }: Props) => {
                 <DropdownMenu
                     renderToggle={(onClick) => (
                         <button
+                            type={'button'}
                             onClick={onClick}
-                            css={tw`text-gray-200 transition-colors duration-150 hover:text-gray-100 p-2`}
+                            css={tw`rounded-lg p-2 text-lumix-muted transition-colors hover:bg-white/5 hover:text-indigo-200`}
                         >
                             <FontAwesomeIcon icon={faEllipsisH} />
                         </button>
@@ -208,8 +209,9 @@ export default ({ backup }: Props) => {
                 </DropdownMenu>
             ) : (
                 <button
+                    type={'button'}
                     onClick={() => setModal('delete')}
-                    css={tw`text-gray-200 transition-colors duration-150 hover:text-gray-100 p-2`}
+                    css={tw`rounded-lg p-2 text-red-300/90 transition-colors hover:bg-red-500/10 hover:text-red-200`}
                 >
                     <FontAwesomeIcon icon={faTrashAlt} />
                 </button>

@@ -1,4 +1,17 @@
 import React, { lazy } from 'react';
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import {
+    faBoxOpen,
+    faCalendarAlt,
+    faCog,
+    faDatabase,
+    faFolderOpen,
+    faHistory,
+    faNetworkWired,
+    faRocket,
+    faTerminal,
+    faUsers,
+} from '@fortawesome/free-solid-svg-icons';
 import ServerConsole from '@/components/server/console/ServerConsoleContainer';
 import DatabasesContainer from '@/components/server/databases/DatabasesContainer';
 import ScheduleContainer from '@/components/server/schedules/ScheduleContainer';
@@ -14,31 +27,24 @@ import AccountSSHContainer from '@/components/dashboard/ssh/AccountSSHContainer'
 import ActivityLogContainer from '@/components/dashboard/activity/ActivityLogContainer';
 import ServerActivityLogContainer from '@/components/server/ServerActivityLogContainer';
 
-// Each of the router files is already code split out appropriately — so
-// all of the items above will only be loaded in when that router is loaded.
-//
-// These specific lazy loaded routes are to avoid loading in heavy screens
-// for the server dashboard when they're only needed for specific instances.
 const FileEditContainer = lazy(() => import('@/components/server/files/FileEditContainer'));
 const ScheduleEditContainer = lazy(() => import('@/components/server/schedules/ScheduleEditContainer'));
 
 interface RouteDefinition {
     path: string;
-    // If undefined is passed this route is still rendered into the router itself
-    // but no navigation link is displayed in the sub-navigation menu.
     name: string | undefined;
     component: React.ComponentType;
     exact?: boolean;
 }
 
-interface ServerRouteDefinition extends RouteDefinition {
+export interface ServerRouteDefinition extends RouteDefinition {
     permission: string | string[] | null;
+    /** Shown in server sub-navigation. */
+    icon?: IconDefinition;
 }
 
 interface Routes {
-    // All of the routes available under "/account"
     account: RouteDefinition[];
-    // All of the routes available under "/server/:id"
     server: ServerRouteDefinition[];
 }
 
@@ -71,6 +77,7 @@ export default {
             path: '/',
             permission: null,
             name: 'Console',
+            icon: faTerminal,
             component: ServerConsole,
             exact: true,
         },
@@ -78,6 +85,7 @@ export default {
             path: '/files',
             permission: 'file.*',
             name: 'Files',
+            icon: faFolderOpen,
             component: FileManagerContainer,
         },
         {
@@ -90,12 +98,14 @@ export default {
             path: '/databases',
             permission: 'database.*',
             name: 'Databases',
+            icon: faDatabase,
             component: DatabasesContainer,
         },
         {
             path: '/schedules',
             permission: 'schedule.*',
             name: 'Schedules',
+            icon: faCalendarAlt,
             component: ScheduleContainer,
         },
         {
@@ -108,36 +118,42 @@ export default {
             path: '/users',
             permission: 'user.*',
             name: 'Users',
+            icon: faUsers,
             component: UsersContainer,
         },
         {
             path: '/backups',
             permission: 'backup.*',
             name: 'Backups',
+            icon: faBoxOpen,
             component: BackupContainer,
         },
         {
             path: '/network',
             permission: 'allocation.*',
             name: 'Network',
+            icon: faNetworkWired,
             component: NetworkContainer,
         },
         {
             path: '/startup',
             permission: 'startup.*',
             name: 'Startup',
+            icon: faRocket,
             component: StartupContainer,
         },
         {
             path: '/settings',
             permission: ['settings.*', 'file.sftp'],
             name: 'Settings',
+            icon: faCog,
             component: SettingsContainer,
         },
         {
             path: '/activity',
             permission: 'activity.*',
             name: 'Activity',
+            icon: faHistory,
             component: ServerActivityLogContainer,
         },
     ],

@@ -11,6 +11,7 @@ import deleteFiles from '@/api/server/files/deleteFiles';
 import RenameFileModal from '@/components/server/files/RenameFileModal';
 import Portal from '@/components/elements/Portal';
 import { Dialog } from '@/components/elements/dialog';
+import LumixCard from '@/components/lumix/LumixCard';
 
 const MassActionsBar = () => {
     const uuid = ServerContext.useStoreState((state) => state.server.data!.uuid);
@@ -62,7 +63,7 @@ const MassActionsBar = () => {
 
     return (
         <>
-            <div css={tw`pointer-events-none fixed bottom-0 z-20 left-0 right-0 flex justify-center`}>
+            <div css={tw`pointer-events-none fixed bottom-0 left-0 right-0 z-20 flex justify-center`}>
                 <SpinnerOverlay visible={loading} size={'large'} fixed>
                     {loadingMessage}
                 </SpinnerOverlay>
@@ -73,15 +74,19 @@ const MassActionsBar = () => {
                     onClose={() => setShowConfirm(false)}
                     onConfirmed={onClickConfirmDeletion}
                 >
-                    <p className={'mb-2'}>
+                    <p className={'mb-2 text-lumix-muted'}>
                         Are you sure you want to delete&nbsp;
-                        <span className={'font-semibold text-gray-50'}>{selectedFiles.length} files</span>? This is a
-                        permanent action and the files cannot be recovered.
+                        <span className={'font-semibold text-[var(--lumix-text)]'}>{selectedFiles.length} files</span>?
+                        This cannot be undone.
                     </p>
-                    {selectedFiles.slice(0, 15).map((file) => (
-                        <li key={file}>{file}</li>
-                    ))}
-                    {selectedFiles.length > 15 && <li>and {selectedFiles.length - 15} others</li>}
+                    <ul css={tw`list-inside list-disc text-sm text-lumix-muted`}>
+                        {selectedFiles.slice(0, 15).map((file) => (
+                            <li key={file}>{file}</li>
+                        ))}
+                    </ul>
+                    {selectedFiles.length > 15 && (
+                        <p css={tw`mt-2 text-sm text-lumix-muted`}>and {selectedFiles.length - 15} others</p>
+                    )}
                 </Dialog.Confirm>
                 {showMove && (
                     <RenameFileModal
@@ -93,15 +98,28 @@ const MassActionsBar = () => {
                     />
                 )}
                 <Portal>
-                    <div className={'pointer-events-none fixed bottom-0 mb-6 flex justify-center w-full z-50'}>
+                    <div css={tw`pointer-events-none fixed bottom-0 z-50 mb-6 flex w-full justify-center`}>
                         <Fade timeout={75} in={selectedFiles.length > 0} unmountOnExit>
-                            <div css={tw`flex items-center space-x-4 pointer-events-auto rounded p-4 bg-black/50`}>
-                                <Button onClick={() => setShowMove(true)}>Move</Button>
-                                <Button onClick={onClickCompress}>Archive</Button>
-                                <Button.Danger variant={Button.Variants.Secondary} onClick={() => setShowConfirm(true)}>
-                                    Delete
-                                </Button.Danger>
-                            </div>
+                            <LumixCard
+                                noHover
+                                css={tw`pointer-events-auto mx-4 border-indigo-500/25 px-4 py-3 shadow-2xl shadow-black/40`}
+                            >
+                                <div css={tw`flex flex-wrap items-center justify-center gap-2`}>
+                                    <Button size={Button.Sizes.Small} onClick={() => setShowMove(true)}>
+                                        Move
+                                    </Button>
+                                    <Button size={Button.Sizes.Small} onClick={onClickCompress}>
+                                        Archive
+                                    </Button>
+                                    <Button.Danger
+                                        size={Button.Sizes.Small}
+                                        variant={Button.Variants.Secondary}
+                                        onClick={() => setShowConfirm(true)}
+                                    >
+                                        Delete
+                                    </Button.Danger>
+                                </div>
+                            </LumixCard>
                         </Fade>
                     </div>
                 </Portal>

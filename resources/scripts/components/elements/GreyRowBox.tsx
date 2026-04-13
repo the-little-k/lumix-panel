@@ -1,12 +1,15 @@
 import styled from 'styled-components/macro';
 import tw from 'twin.macro';
 
+/**
+ * Legacy list row — Lumix-aligned for any remaining callers / upstream merges.
+ */
 export default styled.div<{ $hoverable?: boolean }>`
-    ${tw`flex rounded no-underline text-neutral-200 items-center bg-neutral-700 p-4 border border-transparent transition-colors duration-150 overflow-hidden`};
+    ${tw`flex items-center overflow-hidden rounded-xl border border-lumix-border/50 bg-lumix-surface/80 p-4 text-[var(--lumix-text)] no-underline shadow-sm shadow-black/10 backdrop-blur-xl transition-colors duration-150`};
 
-    ${(props) => props.$hoverable !== false && tw`hover:border-neutral-500`};
+    ${(props) => props.$hoverable !== false && tw`hover:border-indigo-500/30 hover:bg-white/[0.03]`};
 
     & .icon {
-        ${tw`rounded-full w-16 flex items-center justify-center bg-neutral-500 p-3`};
+        ${tw`flex w-16 items-center justify-center rounded-xl bg-white/10 p-3 ring-1 ring-lumix-border/40`};
     }
 `;

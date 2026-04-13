@@ -38,20 +38,20 @@ const PaginationFooter = ({ pagination, className, onPageSelect }: Props) => {
     });
 
     return (
-        <div className={classNames('flex items-center justify-between my-2', className)}>
-            <p className={'text-sm text-neutral-500'}>
+        <div className={classNames('flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between', className)}>
+            <p className={'text-sm text-lumix-muted'}>
                 Showing&nbsp;
-                <span className={'font-semibold text-neutral-400'}>
+                <span className={'font-semibold text-[var(--lumix-text)]'}>
                     {Math.max(start, Math.min(pagination.total, 1))}
                 </span>
                 &nbsp;to&nbsp;
-                <span className={'font-semibold text-neutral-400'}>{end}</span> of&nbsp;
-                <span className={'font-semibold text-neutral-400'}>{pagination.total}</span> results.
+                <span className={'font-semibold text-[var(--lumix-text)]'}>{end}</span> of&nbsp;
+                <span className={'font-semibold text-[var(--lumix-text)]'}>{pagination.total}</span> results.
             </p>
             {pagination.totalPages > 1 && (
-                <div className={'flex space-x-1'}>
+                <div className={'flex flex-wrap justify-end gap-1'}>
                     <Button.Text {...buttonProps(1)} disabled={pages.previous.length !== 2}>
-                        <ChevronDoubleLeftIcon className={'w-3 h-3'} />
+                        <ChevronDoubleLeftIcon className={'h-3 w-3'} />
                     </Button.Text>
                     {pages.previous.reverse().map((value) => (
                         <Button.Text key={`previous-${value}`} {...buttonProps(value)}>
@@ -67,7 +67,7 @@ const PaginationFooter = ({ pagination, className, onPageSelect }: Props) => {
                         </Button.Text>
                     ))}
                     <Button.Text {...buttonProps(total)} disabled={pages.next.length !== 2}>
-                        <ChevronDoubleRightIcon className={'w-3 h-3'} />
+                        <ChevronDoubleRightIcon className={'h-3 w-3'} />
                     </Button.Text>
                 </div>
             )}

@@ -22,7 +22,7 @@ export interface ModalProps extends RequiredModalProps {
 
 export const ModalMask = styled.div`
     ${tw`fixed z-50 overflow-auto flex w-full inset-0`};
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.65);
 `;
 
 const ModalContainer = styled.div<{ alignTop?: boolean }>`
@@ -42,7 +42,7 @@ const ModalContainer = styled.div<{ alignTop?: boolean }>`
     margin-bottom: auto;
 
     & > .close-icon {
-        ${tw`absolute right-0 p-2 text-white cursor-pointer opacity-50 transition-all duration-150 ease-linear hover:opacity-100`};
+        ${tw`absolute right-0 p-2 text-lumix-muted cursor-pointer opacity-70 transition-all duration-150 ease-linear hover:text-[var(--lumix-text)] hover:opacity-100`};
         top: -2.5rem;
 
         &:hover {
@@ -122,15 +122,15 @@ const Modal: React.FC<ModalProps> = ({
                     {showSpinnerOverlay && (
                         <Fade timeout={150} appear in>
                             <div
-                                css={tw`absolute w-full h-full rounded flex items-center justify-center`}
-                                style={{ background: 'hsla(211, 10%, 53%, 0.35)', zIndex: 9999 }}
+                                css={tw`absolute flex h-full w-full items-center justify-center rounded-2xl backdrop-blur-sm`}
+                                style={{ background: 'rgba(0,0,0,0.45)', zIndex: 9999 }}
                             >
                                 <Spinner />
                             </div>
                         </Fade>
                     )}
                     <div
-                        css={tw`bg-neutral-800 p-3 sm:p-4 md:p-6 rounded shadow-md overflow-y-scroll transition-all duration-150`}
+                        css={tw`max-h-[85vh] overflow-y-auto rounded-2xl border border-lumix-border/80 bg-lumix-surface/95 p-4 shadow-xl shadow-black/35 backdrop-blur-xl transition-all duration-150 sm:p-5 md:p-6`}
                     >
                         {children}
                     </div>

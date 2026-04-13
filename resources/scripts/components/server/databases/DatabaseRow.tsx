@@ -17,8 +17,10 @@ import tw from 'twin.macro';
 import Button from '@/components/elements/Button';
 import Label from '@/components/elements/Label';
 import Input from '@/components/elements/Input';
-import GreyRowBox from '@/components/elements/GreyRowBox';
 import CopyOnClick from '@/components/elements/CopyOnClick';
+import LumixCard from '@/components/lumix/LumixCard';
+import LumixMetaItem from '@/components/lumix/LumixMetaItem';
+import { Button as LumixButton } from '@/components/elements/button/index';
 
 interface Props {
     database: ServerDatabase;
@@ -72,25 +74,25 @@ export default ({ database, className }: Props) => {
                         }}
                     >
                         <FlashMessageRender byKey={'database:delete'} css={tw`mb-6`} />
-                        <h2 css={tw`text-2xl mb-6`}>Confirm database deletion</h2>
-                        <p css={tw`text-sm`}>
-                            Deleting a database is a permanent action, it cannot be undone. This will permanently delete
-                            the <strong>{database.name}</strong> database and remove all associated data.
+                        <h2 css={tw`mb-2 text-2xl font-semibold text-[var(--lumix-text)]`}>Delete database</h2>
+                        <p css={tw`text-sm text-lumix-muted`}>
+                            This permanently deletes <strong css={tw`text-[var(--lumix-text)]`}>{database.name}</strong>{' '}
+                            and all data. This cannot be undone.
                         </p>
                         <Form css={tw`m-0 mt-6`}>
                             <Field
                                 type={'text'}
                                 id={'confirm_name'}
                                 name={'confirm'}
-                                label={'Confirm Database Name'}
-                                description={'Enter the database name to confirm deletion.'}
+                                label={'Confirm database name'}
+                                description={'Type the database name to confirm.'}
                             />
-                            <div css={tw`mt-6 text-right`}>
-                                <Button type={'button'} isSecondary css={tw`mr-2`} onClick={() => setVisible(false)}>
+                            <div css={tw`mt-6 flex flex-wrap justify-end gap-2`}>
+                                <Button type={'button'} isSecondary onClick={() => setVisible(false)}>
                                     Cancel
                                 </Button>
                                 <Button type={'submit'} color={'red'} disabled={!isValid}>
-                                    Delete Database
+                                    Delete
                                 </Button>
                             </div>
                         </Form>
@@ -99,38 +101,40 @@ export default ({ database, className }: Props) => {
             </Formik>
             <Modal visible={connectionVisible} onDismissed={() => setConnectionVisible(false)}>
                 <FlashMessageRender byKey={'database-connection-modal'} css={tw`mb-6`} />
-                <h3 css={tw`mb-6 text-2xl`}>Database connection details</h3>
-                <div>
-                    <Label>Endpoint</Label>
-                    <CopyOnClick text={database.connectionString}>
-                        <Input type={'text'} readOnly value={database.connectionString} />
-                    </CopyOnClick>
-                </div>
-                <div css={tw`mt-6`}>
-                    <Label>Connections from</Label>
-                    <Input type={'text'} readOnly value={database.allowConnectionsFrom} />
-                </div>
-                <div css={tw`mt-6`}>
-                    <Label>Username</Label>
-                    <CopyOnClick text={database.username}>
-                        <Input type={'text'} readOnly value={database.username} />
-                    </CopyOnClick>
-                </div>
-                <Can action={'database.view_password'}>
-                    <div css={tw`mt-6`}>
-                        <Label>Password</Label>
-                        <CopyOnClick text={database.password} showInNotification={false}>
-                            <Input type={'text'} readOnly value={database.password} />
+                <h3 css={tw`mb-6 text-xl font-semibold text-[var(--lumix-text)]`}>Connection details</h3>
+                <div css={tw`space-y-4`}>
+                    <div>
+                        <Label>Endpoint</Label>
+                        <CopyOnClick text={database.connectionString}>
+                            <Input type={'text'} readOnly value={database.connectionString} />
                         </CopyOnClick>
                     </div>
-                </Can>
-                <div css={tw`mt-6`}>
-                    <Label>JDBC Connection String</Label>
-                    <CopyOnClick text={jdbcConnectionString} showInNotification={false}>
-                        <Input type={'text'} readOnly value={jdbcConnectionString} />
-                    </CopyOnClick>
+                    <div>
+                        <Label>Connections from</Label>
+                        <Input type={'text'} readOnly value={database.allowConnectionsFrom} />
+                    </div>
+                    <div>
+                        <Label>Username</Label>
+                        <CopyOnClick text={database.username}>
+                            <Input type={'text'} readOnly value={database.username} />
+                        </CopyOnClick>
+                    </div>
+                    <Can action={'database.view_password'}>
+                        <div>
+                            <Label>Password</Label>
+                            <CopyOnClick text={database.password} showInNotification={false}>
+                                <Input type={'text'} readOnly value={database.password} />
+                            </CopyOnClick>
+                        </div>
+                    </Can>
+                    <div>
+                        <Label>JDBC connection string</Label>
+                        <CopyOnClick text={jdbcConnectionString} showInNotification={false}>
+                            <Input type={'text'} readOnly value={jdbcConnectionString} />
+                        </CopyOnClick>
+                    </div>
                 </div>
-                <div css={tw`mt-6 text-right`}>
+                <div css={tw`mt-8 flex flex-wrap justify-end gap-2 border-t border-neutral-600 pt-6`}>
                     <Can action={'database.update'}>
                         <RotatePasswordButton databaseId={database.id} onUpdate={appendDatabase} />
                     </Can>
@@ -139,42 +143,60 @@ export default ({ database, className }: Props) => {
                     </Button>
                 </div>
             </Modal>
-            <GreyRowBox $hoverable={false} className={className} css={tw`mb-2`}>
-                <div css={tw`hidden md:block`}>
-                    <FontAwesomeIcon icon={faDatabase} fixedWidth />
+            <LumixCard noHover className={className} css={tw`p-4 sm:p-5`}>
+                <div css={tw`flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between`}>
+                    <div css={tw`flex min-w-0 flex-1 gap-4`}>
+                        <div
+                            css={tw`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-200 ring-1 ring-indigo-400/20`}
+                        >
+                            <FontAwesomeIcon icon={faDatabase} className={'text-lg'} />
+                        </div>
+                        <div css={tw`min-w-0 flex-1`}>
+                            <CopyOnClick text={database.name}>
+                                <p css={tw`truncate text-lg font-semibold text-[var(--lumix-text)]`}>{database.name}</p>
+                            </CopyOnClick>
+                            <p css={tw`mt-1 text-xs text-lumix-muted`}>MySQL database</p>
+                            <div
+                                css={tw`mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3`}
+                            >
+                                <LumixMetaItem label={'Endpoint'}>
+                                    <CopyOnClick text={database.connectionString}>
+                                        <span css={tw`font-mono text-xs`}>{database.connectionString}</span>
+                                    </CopyOnClick>
+                                </LumixMetaItem>
+                                <LumixMetaItem label={'Connections from'}>
+                                    <span css={tw`font-mono text-xs`}>{database.allowConnectionsFrom}</span>
+                                </LumixMetaItem>
+                                <LumixMetaItem label={'Username'}>
+                                    <CopyOnClick text={database.username}>
+                                        <span css={tw`font-mono text-xs`}>{database.username}</span>
+                                    </CopyOnClick>
+                                </LumixMetaItem>
+                            </div>
+                        </div>
+                    </div>
+                    <div css={tw`flex shrink-0 flex-wrap items-center gap-2 border-t border-lumix-border/30 pt-4 lg:border-0 lg:pt-0`}>
+                        <LumixButton.Text
+                            size={LumixButton.Sizes.Small}
+                            onClick={() => setConnectionVisible(true)}
+                            className={'inline-flex items-center gap-2'}
+                        >
+                            <FontAwesomeIcon icon={faEye} />
+                            Details
+                        </LumixButton.Text>
+                        <Can action={'database.delete'}>
+                            <LumixButton.Danger
+                                size={LumixButton.Sizes.Small}
+                                onClick={() => setVisible(true)}
+                                className={'inline-flex items-center gap-2'}
+                            >
+                                <FontAwesomeIcon icon={faTrashAlt} />
+                                Delete
+                            </LumixButton.Danger>
+                        </Can>
+                    </div>
                 </div>
-                <div css={tw`flex-1 ml-4`}>
-                    <CopyOnClick text={database.name}>
-                        <p css={tw`text-lg`}>{database.name}</p>
-                    </CopyOnClick>
-                </div>
-                <div css={tw`ml-8 text-center hidden md:block`}>
-                    <CopyOnClick text={database.connectionString}>
-                        <p css={tw`text-sm`}>{database.connectionString}</p>
-                    </CopyOnClick>
-                    <p css={tw`mt-1 text-2xs text-neutral-500 uppercase select-none`}>Endpoint</p>
-                </div>
-                <div css={tw`ml-8 text-center hidden md:block`}>
-                    <p css={tw`text-sm`}>{database.allowConnectionsFrom}</p>
-                    <p css={tw`mt-1 text-2xs text-neutral-500 uppercase select-none`}>Connections from</p>
-                </div>
-                <div css={tw`ml-8 text-center hidden md:block`}>
-                    <CopyOnClick text={database.username}>
-                        <p css={tw`text-sm`}>{database.username}</p>
-                    </CopyOnClick>
-                    <p css={tw`mt-1 text-2xs text-neutral-500 uppercase select-none`}>Username</p>
-                </div>
-                <div css={tw`ml-8`}>
-                    <Button isSecondary css={tw`mr-2`} onClick={() => setConnectionVisible(true)}>
-                        <FontAwesomeIcon icon={faEye} fixedWidth />
-                    </Button>
-                    <Can action={'database.delete'}>
-                        <Button color={'red'} isSecondary onClick={() => setVisible(true)}>
-                            <FontAwesomeIcon icon={faTrashAlt} fixedWidth />
-                        </Button>
-                    </Can>
-                </div>
-            </GreyRowBox>
+            </LumixCard>
         </>
     );
 };

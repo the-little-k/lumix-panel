@@ -12,11 +12,12 @@ import Can from '@/components/elements/Can';
 import { usePermissions } from '@/plugins/usePermissions';
 import { useDeepCompareMemo } from '@/plugins/useDeepCompareMemo';
 import tw from 'twin.macro';
-import Button from '@/components/elements/Button';
+import { Button } from '@/components/elements/button/index';
 import PermissionTitleBox from '@/components/server/users/PermissionTitleBox';
 import asModal from '@/hoc/asModal';
 import PermissionRow from '@/components/server/users/PermissionRow';
 import ModalContext from '@/context/ModalContext';
+import LumixCard from '@/components/lumix/LumixCard';
 
 type Props = {
     subuser?: Subuser;
@@ -38,12 +39,9 @@ const EditSubuserModal = ({ subuser }: Props) => {
 
     const isRootAdmin = useStoreState((state) => state.user.data!.rootAdmin);
     const permissions = useStoreState((state) => state.permissions.data);
-    // The currently logged in user's permissions. We're going to filter out any permissions
-    // that they should not need.
     const loggedInPermissions = ServerContext.useStoreState((state) => state.server.permissions);
     const [canEditUser] = usePermissions(subuser ? ['user.update'] : ['user.create']);
 
-    // The permissions that can be modified by this user.
     const editablePermissions = useDeepCompareMemo(() => {
         const cleaned = Object.keys(permissions).map((key) =>
             Object.keys(permissions[key].keys).map((pkey) => `${key}.${pkey}`)
@@ -102,51 +100,66 @@ const EditSubuserModal = ({ subuser }: Props) => {
                 permissions: array().of(string()),
             })}
         >
-            <Form>
-                <div css={tw`flex justify-between`}>
-                    <h2 css={tw`text-2xl`} ref={ref}>
-                        {subuser
-                            ? `${canEditUser ? 'Modify' : 'View'} permissions for ${subuser.email}`
-                            : 'Create new subuser'}
-                    </h2>
-                    <div>
-                        <Button type={'submit'} css={tw`w-full sm:w-auto`}>
-                            {subuser ? 'Save' : 'Invite User'}
-                        </Button>
+            <Form css={tw`m-0`}>
+                <div css={tw`flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between`}>
+                    <div css={tw`min-w-0`}>
+                        <h2
+                            css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}
+                            ref={ref}
+                        >
+                            {subuser
+                                ? `${canEditUser ? 'Edit' : 'View'} subuser`
+                                : 'Invite subuser'}
+                        </h2>
+                        <p css={tw`mt-1 text-sm text-lumix-muted`}>
+                            {subuser
+                                ? subuser.email
+                                : 'Send an invitation by email. They will only see this server with the permissions you choose.'}
+                        </p>
                     </div>
+                    <Can action={subuser ? 'user.update' : 'user.create'}>
+                        <Button type={'submit'} className={'w-full shrink-0 sm:w-auto'}>
+                            {subuser ? 'Save changes' : 'Invite user'}
+                        </Button>
+                    </Can>
                 </div>
-                <FlashMessageRender byKey={'user:edit'} css={tw`mt-4`} />
+                <FlashMessageRender byKey={'user:edit'} className={'mt-4'} />
                 {!isRootAdmin && loggedInPermissions[0] !== '*' && (
-                    <div css={tw`mt-4 pl-4 py-2 border-l-4 border-cyan-400`}>
-                        <p css={tw`text-sm text-neutral-300`}>
-                            Only permissions which your account is currently assigned may be selected when creating or
-                            modifying other users.
+                    <div
+                        css={tw`mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.06] px-4 py-3`}
+                    >
+                        <p css={tw`text-sm leading-relaxed text-lumix-muted`}>
+                            Only permissions your account already has can be granted when creating or editing subusers.
                         </p>
                     </div>
                 )}
                 {!subuser && (
-                    <div css={tw`mt-6`}>
-                        <Field
-                            name={'email'}
-                            label={'User Email'}
-                            description={
-                                'Enter the email address of the user you wish to invite as a subuser for this server.'
-                            }
-                        />
-                    </div>
+                    <LumixCard noHover css={tw`mt-6 overflow-hidden`}>
+                        <div css={tw`border-b border-lumix-border/30 bg-black/10 px-4 py-3 sm:px-5`}>
+                            <h3 css={tw`text-sm font-semibold text-[var(--lumix-text)]`}>Invitee</h3>
+                        </div>
+                        <div css={tw`p-4 sm:p-5`}>
+                            <Field
+                                name={'email'}
+                                label={'Email address'}
+                                description={'Must match the account they use (or will use) on this panel.'}
+                            />
+                        </div>
+                    </LumixCard>
                 )}
-                <div css={tw`my-6`}>
+                <div css={tw`mt-6 space-y-4`}>
                     {Object.keys(permissions)
                         .filter((key) => key !== 'websocket')
-                        .map((key, index) => (
+                        .map((key) => (
                             <PermissionTitleBox
                                 key={`permission_${key}`}
                                 title={key}
                                 isEditable={canEditUser}
                                 permissions={Object.keys(permissions[key].keys).map((pkey) => `${key}.${pkey}`)}
-                                css={index > 0 ? tw`mt-4` : undefined}
                             >
-                                <p css={tw`text-sm text-neutral-400 mb-4`}>{permissions[key].description}</p>
+                                <p css={tw`mb-4 text-sm leading-relaxed text-lumix-muted`}>
+                                    {permissions[key].description}
+                                </p>
                                 {Object.keys(permissions[key].keys).map((pkey) => (
                                     <PermissionRow
                                         key={`permission_${key}.${pkey}`}
@@ -158,9 +171,9 @@ const EditSubuserModal = ({ subuser }: Props) => {
                         ))}
                 </div>
                 <Can action={subuser ? 'user.update' : 'user.create'}>
-                    <div css={tw`pb-6 flex justify-end`}>
-                        <Button type={'submit'} css={tw`w-full sm:w-auto`}>
-                            {subuser ? 'Save' : 'Invite User'}
+                    <div css={tw`flex justify-end pb-2 pt-6`}>
+                        <Button type={'submit'} className={'w-full sm:w-auto'}>
+                            {subuser ? 'Save changes' : 'Invite user'}
                         </Button>
                     </div>
                 </Can>

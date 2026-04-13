@@ -55,16 +55,16 @@ const HytaleOauthRequireFeature = () => {
             showSpinnerOverlay={false}
         >
             <FlashMessageRender key={'feature:hytaleOauth'} css={tw`mb-4`} />
-            <h2 css={tw`text-2xl mb-4 text-neutral-100`}>Authentication Required</h2>
-            <p css={tw`text-neutral-200`}>
-                You need to authenticate with your Hytale account to download or update server files. Please log in to
-                continue.
+            <h2 css={tw`text-xl font-semibold tracking-tight text-[var(--lumix-text)]`}>Authentication required</h2>
+            <p css={tw`mt-3 text-sm leading-relaxed text-lumix-muted`}>
+                Sign in with your Hytale account to download or update server files. Your browser will open the device
+                verification flow.
             </p>
-            <div css={tw`mt-8 sm:flex items-center justify-end`}>
-                <Button isSecondary onClick={() => setVisible(false)} css={tw`w-full sm:w-auto border-transparent`}>
+            <div css={tw`mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end`}>
+                <Button isSecondary onClick={() => setVisible(false)} css={tw`w-full border-transparent sm:w-auto`}>
                     Cancel
                 </Button>
-                <Button onClick={handleLogin} css={tw`mt-4 sm:mt-0 sm:ml-4 w-full sm:w-auto`}>
+                <Button onClick={handleLogin} css={tw`w-full sm:w-auto`}>
                     Log in
                 </Button>
             </div>

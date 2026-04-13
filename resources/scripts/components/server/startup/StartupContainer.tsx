@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import TitledGreyBox from '@/components/elements/TitledGreyBox';
 import tw from 'twin.macro';
 import VariableBox from '@/components/server/startup/VariableBox';
 import ServerContentBlock from '@/components/elements/ServerContentBlock';
@@ -15,6 +14,8 @@ import Input from '@/components/elements/Input';
 import setSelectedDockerImage from '@/api/server/setSelectedDockerImage';
 import InputSpinner from '@/components/elements/InputSpinner';
 import useFlash from '@/plugins/useFlash';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
+import LumixCard from '@/components/lumix/LumixCard';
 
 const StartupContainer = () => {
     const [loading, setLoading] = useState(false);
@@ -83,49 +84,83 @@ const StartupContainer = () => {
             <ServerError title={'Oops!'} message={httpErrorToHuman(error)} onRetry={() => mutate()} />
         )
     ) : (
-        <ServerContentBlock title={'Startup Settings'} showFlashKey={'startup:image'}>
-            <div css={tw`md:flex`}>
-                <TitledGreyBox title={'Startup Command'} css={tw`flex-1`}>
-                    <div css={tw`px-1 py-2`}>
-                        <p css={tw`font-mono bg-neutral-900 rounded py-2 px-4`}>{data.invocation}</p>
+        <ServerContentBlock title={'Startup'} showFlashKey={'startup:image'}>
+            <LumixSectionHeader
+                title={'Startup'}
+                description={
+                    'The resolved launch command and container image come from your nest egg. Environment variables below map into the running instance.'
+                }
+            />
+            <div css={tw`flex flex-col gap-6 xl:flex-row xl:items-stretch`}>
+                <LumixCard noHover css={tw`min-w-0 flex-1 overflow-hidden`}>
+                    <div
+                        css={tw`border-b border-lumix-border/30 bg-black/10 px-4 py-3 sm:px-5`}
+                    >
+                        <h3 css={tw`text-sm font-semibold text-[var(--lumix-text)]`}>Startup command</h3>
+                        <p css={tw`mt-0.5 text-xs text-lumix-muted`}>
+                            Generated from the egg; read-only on this screen.
+                        </p>
                     </div>
-                </TitledGreyBox>
-                <TitledGreyBox title={'Docker Image'} css={tw`flex-1 lg:flex-none lg:w-1/3 mt-8 md:mt-0 md:ml-10`}>
-                    {Object.keys(data.dockerImages).length > 1 && !isCustomImage ? (
-                        <>
-                            <InputSpinner visible={loading}>
-                                <Select
-                                    disabled={Object.keys(data.dockerImages).length < 2}
-                                    onChange={updateSelectedDockerImage}
-                                    defaultValue={variables.dockerImage}
-                                >
-                                    {Object.keys(data.dockerImages).map((key) => (
-                                        <option key={data.dockerImages[key]} value={data.dockerImages[key]}>
-                                            {key}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </InputSpinner>
-                            <p css={tw`text-xs text-neutral-300 mt-2`}>
-                                This is an advanced feature allowing you to select a Docker image to use when running
-                                this server instance.
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <Input disabled readOnly value={variables.dockerImage} />
-                            {isCustomImage && (
-                                <p css={tw`text-xs text-neutral-300 mt-2`}>
-                                    This {"server's"} Docker image has been manually set by an administrator and cannot
-                                    be changed through this UI.
+                    <div css={tw`p-4 sm:p-5`}>
+                        <pre
+                            css={tw`whitespace-pre-wrap break-words rounded-xl border border-lumix-border/40 bg-black/30 px-4 py-3 font-mono text-sm leading-relaxed text-[var(--lumix-text)]`}
+                        >
+                            {data.invocation}
+                        </pre>
+                    </div>
+                </LumixCard>
+                <LumixCard noHover css={tw`w-full shrink-0 overflow-hidden xl:max-w-sm`}>
+                    <div
+                        css={tw`border-b border-lumix-border/30 bg-black/10 px-4 py-3 sm:px-5`}
+                    >
+                        <h3 css={tw`text-sm font-semibold text-[var(--lumix-text)]`}>Docker image</h3>
+                        <p css={tw`mt-0.5 text-xs text-lumix-muted`}>
+                            The container image Wings uses when starting this server.
+                        </p>
+                    </div>
+                    <div css={tw`p-4 sm:p-5`}>
+                        {Object.keys(data.dockerImages).length > 1 && !isCustomImage ? (
+                            <>
+                                <InputSpinner visible={loading}>
+                                    <Select
+                                        disabled={Object.keys(data.dockerImages).length < 2}
+                                        onChange={updateSelectedDockerImage}
+                                        defaultValue={variables.dockerImage}
+                                    >
+                                        {Object.keys(data.dockerImages).map((key) => (
+                                            <option key={data.dockerImages[key]} value={data.dockerImages[key]}>
+                                                {key}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </InputSpinner>
+                                <p css={tw`mt-3 text-xs leading-relaxed text-lumix-muted`}>
+                                    When multiple images are offered for this egg, pick the one that matches your
+                                    workload. Changes apply on the next full server start.
                                 </p>
-                            )}
-                        </>
-                    )}
-                </TitledGreyBox>
+                            </>
+                        ) : (
+                            <>
+                                <Input disabled readOnly value={variables.dockerImage} />
+                                {isCustomImage && (
+                                    <p css={tw`mt-3 text-xs leading-relaxed text-lumix-muted`}>
+                                        This {"server's"} Docker image was set by an administrator and cannot be changed
+                                        from this panel.
+                                    </p>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </LumixCard>
             </div>
-            <h3 css={tw`mt-8 mb-2 text-2xl`}>Variables</h3>
-            <div css={tw`grid gap-8 md:grid-cols-2`}>
+            <LumixSectionHeader
+                className={'mt-10'}
+                title={'Environment variables'}
+                description={
+                    'Fields defined by the egg appear below. Defaults show as placeholders; your saved values override them. Editable fields save shortly after you finish typing.'
+                }
+            />
+            <div css={tw`grid gap-4 md:grid-cols-2 md:gap-6`}>
                 {data.variables.map((variable) => (
                     <VariableBox key={variable.envVariable} variable={variable} />
                 ))}

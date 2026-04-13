@@ -1,9 +1,9 @@
 import React, { memo, useCallback } from 'react';
 import { useField } from 'formik';
-import TitledGreyBox from '@/components/elements/TitledGreyBox';
 import tw from 'twin.macro';
 import Input from '@/components/elements/Input';
 import isEqual from 'react-fast-compare';
+import LumixCard from '@/components/lumix/LumixCard';
 
 interface Props {
     isEditable: boolean;
@@ -27,23 +27,23 @@ const PermissionTitleBox: React.FC<Props> = memo(({ isEditable, title, permissio
     );
 
     return (
-        <TitledGreyBox
-            title={
-                <div css={tw`flex items-center`}>
-                    <p css={tw`text-sm uppercase flex-1`}>{title}</p>
-                    {isEditable && (
-                        <Input
-                            type={'checkbox'}
-                            checked={permissions.every((p) => value.includes(p))}
-                            onChange={onCheckboxClicked}
-                        />
-                    )}
-                </div>
-            }
-            className={className}
-        >
-            {children}
-        </TitledGreyBox>
+        <LumixCard noHover className={className} css={tw`overflow-hidden`}>
+            <div
+                css={tw`flex items-center gap-3 border-b border-lumix-border/30 bg-black/10 px-4 py-3 sm:px-5`}
+            >
+                <p css={tw`flex-1 text-sm font-semibold uppercase tracking-wide text-[var(--lumix-text)]`}>
+                    {title}
+                </p>
+                {isEditable && (
+                    <Input
+                        type={'checkbox'}
+                        checked={permissions.every((p) => value.includes(p))}
+                        onChange={onCheckboxClicked}
+                    />
+                )}
+            </div>
+            <div css={tw`p-4 sm:p-5`}>{children}</div>
+        </LumixCard>
     );
 }, isEqual);
 

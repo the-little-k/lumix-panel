@@ -13,6 +13,8 @@ import useSWR from 'swr';
 import { PaginatedResult } from '@/api/http';
 import Pagination from '@/components/elements/Pagination';
 import { useLocation } from 'react-router-dom';
+import LumixSectionHeader from '@/components/lumix/LumixSectionHeader';
+import LumixEmptyState from '@/components/lumix/LumixEmptyState';
 
 export default () => {
     const { search } = useLocation();
@@ -41,9 +43,6 @@ export default () => {
     }, [servers?.pagination.currentPage]);
 
     useEffect(() => {
-        // Don't use react-router to handle changing this part of the URL, otherwise it
-        // triggers a needless re-render. We just want to track this in the URL incase the
-        // user refreshes the page.
         window.history.replaceState(null, document.title, `/${page <= 1 ? '' : `?page=${page}`}`);
     }, [page]);
 
@@ -54,9 +53,15 @@ export default () => {
 
     return (
         <PageContentBlock title={'Dashboard'} showFlashKey={'dashboard'}>
+            <LumixSectionHeader
+                title={'Your servers'}
+                description={'Monitor usage, open the console, and control power from one place.'}
+            />
             {rootAdmin && (
-                <div css={tw`mb-2 flex justify-end items-center`}>
-                    <p css={tw`uppercase text-xs text-neutral-400 mr-2`}>
+                <div
+                    css={tw`mb-6 flex flex-col items-stretch justify-end gap-2 rounded-2xl border border-lumix-border/60 bg-lumix-surface/50 px-4 py-3 backdrop-blur sm:flex-row sm:items-center`}
+                >
+                    <p css={tw`text-2xs font-semibold uppercase tracking-wide text-lumix-muted`}>
                         {showOnlyAdmin ? "Showing others' servers" : 'Showing your servers'}
                     </p>
                     <Switch
@@ -67,20 +72,30 @@ export default () => {
                 </div>
             )}
             {!servers ? (
-                <Spinner centered size={'large'} />
+                <div css={tw`flex justify-center py-16`}>
+                    <Spinner size={'large'} centered />
+                </div>
             ) : (
                 <Pagination data={servers} onPageSelect={setPage}>
                     {({ items }) =>
                         items.length > 0 ? (
-                            items.map((server, index) => (
-                                <ServerRow key={server.uuid} server={server} css={index > 0 ? tw`mt-2` : undefined} />
-                            ))
+                            <div css={tw`grid grid-cols-1 gap-4 lg:grid-cols-2`}>
+                                {items.map((server) => (
+                                    <ServerRow key={server.uuid} server={server} />
+                                ))}
+                            </div>
                         ) : (
-                            <p css={tw`text-center text-sm text-neutral-400`}>
+                            <LumixEmptyState
+                                title={
+                                    showOnlyAdmin
+                                        ? 'No other servers to show'
+                                        : 'No servers on this account'
+                                }
+                            >
                                 {showOnlyAdmin
-                                    ? 'There are no other servers to display.'
-                                    : 'There are no servers associated with your account.'}
-                            </p>
+                                    ? 'There are no additional servers to list, or you may need different filters in the admin area.'
+                                    : 'When a server is assigned to your account, it will appear here.'}
+                            </LumixEmptyState>
                         )
                     }
                 </Pagination>

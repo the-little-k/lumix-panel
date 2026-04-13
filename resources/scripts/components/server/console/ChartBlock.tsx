@@ -11,10 +11,14 @@ interface ChartBlockProps {
 export default ({ title, legend, children }: ChartBlockProps) => (
     <div className={classNames(styles.chart_container, 'group')}>
         <div className={'flex items-center justify-between px-4 py-2'}>
-            <h3 className={'font-header font-medium transition-colors duration-100 group-hover:text-gray-50'}>
+            <h3
+                className={
+                    'font-header font-medium text-[var(--lumix-text)] transition-colors duration-100 group-hover:text-indigo-100'
+                }
+            >
                 {title}
             </h3>
-            {legend && <p className={'text-sm flex items-center'}>{legend}</p>}
+            {legend && <p className={'flex items-center text-sm text-lumix-muted'}>{legend}</p>}
         </div>
         <div className={'z-10 ml-2'}>{children}</div>
     </div>

@@ -62,17 +62,19 @@ export default () => {
     return (
         <ServerContentBlock title={'File Manager'} showFlashKey={'files'}>
             <ErrorBoundary>
-                <div className={'flex flex-wrap-reverse md:flex-nowrap mb-4'}>
-                    <FileManagerBreadcrumbs
-                        renderLeft={
-                            <FileActionCheckbox
-                                type={'checkbox'}
-                                css={tw`mx-4`}
-                                checked={selectedFilesLength === (files?.length === 0 ? -1 : files?.length)}
-                                onChange={onSelectAllClick}
-                            />
-                        }
-                    />
+                <div css={tw`mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between`}>
+                    <div css={tw`min-w-0 flex-1`}>
+                        <FileManagerBreadcrumbs
+                            renderLeft={
+                                <FileActionCheckbox
+                                    type={'checkbox'}
+                                    css={tw`mx-2`}
+                                    checked={selectedFilesLength === (files?.length === 0 ? -1 : files?.length)}
+                                    onChange={onSelectAllClick}
+                                />
+                            }
+                        />
+                    </div>
                     <Can action={'file.create'}>
                         <div className={style.manager_actions}>
                             <FileManagerStatus />
@@ -90,15 +92,17 @@ export default () => {
             ) : (
                 <>
                     {!files.length ? (
-                        <p css={tw`text-sm text-neutral-400 text-center`}>This directory seems to be empty.</p>
+                        <p css={tw`rounded-xl border border-dashed border-lumix-border/50 py-12 text-center text-sm text-lumix-muted`}>
+                            This directory is empty.
+                        </p>
                     ) : (
                         <CSSTransition classNames={'fade'} timeout={150} appear in>
                             <div>
                                 {files.length > 250 && (
-                                    <div css={tw`rounded bg-yellow-400 mb-px p-3`}>
-                                        <p css={tw`text-yellow-900 text-sm text-center`}>
-                                            This directory is too large to display in the browser, limiting the output
-                                            to the first 250 files.
+                                    <div css={tw`mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3`}>
+                                        <p css={tw`text-center text-sm text-amber-100`}>
+                                            This directory is too large to display in the browser; showing the first 250
+                                            files.
                                         </p>
                                     </div>
                                 )}
